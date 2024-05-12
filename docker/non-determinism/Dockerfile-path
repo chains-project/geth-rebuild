@@ -1,4 +1,4 @@
-# trimpath is broken in bionic for some C packages: https://github.com/golang/go/issues/67011
+# path: trimpath is broken in ubuntu:bionic: https://github.com/golang/go/issues/67011
 FROM ubuntu:bionic
 
 RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget -yq --no-install-recommends
@@ -13,7 +13,8 @@ ENV PATH=$PATH:/usr/local/go/bin
 # reference build. v. 1.14.0, may 9 2024
 # TODO generalise to take in a certain geth version...
 RUN wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.14.0-87246f3c.tar.gz && tar -xvf geth-linux-amd64-1.14.0-87246f3c.tar.gz && \
-	cd geth-linux-amd64-1.14.0-87246f3c && strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
+	cd geth-linux-amd64-1.14.0-87246f3c && \
+	strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
 	mkdir -p /bin && mv geth /bin/geth-reference
 
 # reproducing build 1.14.0
@@ -26,9 +27,11 @@ RUN git clone --depth 1 --branch v1.14.0 https://github.com/ethereum/go-ethereum
 
 # TODO include  /etc/os-release ?
 RUN cd /bin && echo "# geth reference build" > /non-determinism.md && \
+	go version -m geth-reference | head -n 1 >> /non-determinism.md && \
 	echo "Running \`readelf -p .rodata geth-reference | grep /home/travis\`..." >> /non-determinism.md && \
 	readelf -p .rodata /bin/geth-reference | grep /home/travis >> /non-determinism.md  || echo "No match." >> /non-determinism.md 
 
 RUN cd /bin && echo "# geth reproducing build" >> /non-determinism.md && \
+	go version -m geth-reproduce | head -n 1 >> /non-determinism.md && \
 	echo "Running \`readelf -p .rodata geth-reproduce | grep /root/go/pkg\`..." >> /non-determinism.md && \
 	readelf -p .rodata geth-reproduce | grep /root/go/pkg >> /non-determinism.md || echo "No match." >> /non-determinism.md 

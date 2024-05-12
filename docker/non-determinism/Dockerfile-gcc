@@ -1,7 +1,7 @@
 # GCC version mismatch: noble vs noble
 FROM ubuntu:noble
 
-RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget file -yq --no-install-recommends
+RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget -yq --no-install-recommends
 
 RUN wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && \

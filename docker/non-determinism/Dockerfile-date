@@ -1,3 +1,5 @@
+# date: reference builds have date embedded
+# checking out in detached state does not embed the date (git checkout <commit>)
 FROM ubuntu:bionic
 
 RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget -yq --no-install-recommends
@@ -12,7 +14,8 @@ ENV PATH=$PATH:/usr/local/go/bin
 # reference build. v1.14.3, may 9 2024
 # TODO generalise to take in a certain geth version...
 RUN wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.14.3-ab48ba42.tar.gz && tar -xvf geth-linux-amd64-1.14.3-ab48ba42.tar.gz && \
-    cd geth-linux-amd64-1.14.3-ab48ba42 && strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
+    cd geth-linux-amd64-1.14.3-ab48ba42 && \
+    strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
     mkdir -p /bin && mv geth /bin/geth-reference
 
 # reproducing build
