@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <non-determinism case (date/gcc/paths)> <docker tag>"
+    echo "Usage: $0 <non-determinism case (date/gcc/path)> <docker tag>"
     exit 1
 fi
 
@@ -12,14 +12,14 @@ DOCKER_PATH=./docker/non-determinism/Dockerfile-$ND_CASE
 OUTPUT_DIR=./bin
 REPORT_DIR=./reports
 mkdir -p $OUTPUT_DIR
-rm $OUTPUT_DIR/geth-reference && rm $OUTPUT_DIR/geth-reproduce
+rm $OUTPUT_DIR/geth-reference $OUTPUT_DIR/geth-reproduce
 
 # build image
 echo "Starting docker build..."
 docker build -t "$TAG" - < "$DOCKER_PATH"
 
 if [ $? != 0 ]; then
-    echo "Error: Is docker daemon started?" && exit 1
+    echo "Error: Docker build failed." && exit 1
 fi
 
 # start container
@@ -44,7 +44,7 @@ if [ "$md5_reproduce" != "$md5_reference" ]; then
     docker cp -q "$CONTAINER_ID":/non-determinism.md "$REPORT_DIR/non-determinism-$ND_CASE.md"
     echo "You can run diffoscope with 'cd ./bin && docker run --rm -t -w '$(pwd)' -v '$(pwd)':'$(pwd)':rw registry.salsa.debian.org/reproducible-builds/diffoscope --progress geth-reference geth-reproduce'"
 else
-    if [ "$md5_reproduce" == "" ]; then
+    if [ "$md5_reproduce" = "" ]; then
         { echo "Error: no binary produced."; exit 1; }
     else
         echo "Binaries match."
