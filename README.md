@@ -30,21 +30,23 @@ What has been bit-for-bit reproduced?
 
 When reproducing a geth binary, we need the correct **source code** and **build configurations** to reproduce the binary.
 
-- **Q:** can we just take in a geth binary and get all information? _Probably..._ except ubuntu dist? Check if can reproduce regardless of underlying ubuntu dist.
+- **Q:** can we just take in a geth binary and get all information? All except ubuntu dist & custom flags/build configs
 
 Given a certain...
 
 - `GETH_VERSION`: E.g. 1.14.0 or 1.14.1-unstable
-- Target OS (TODO: currently only Linux)
-- `TARGET_ARCH`: target architecture, e.g. amd-65
+- `TARGET_ARCH`: target architecture, e.g. linux amd64
+- `GETH_PKG`: relevant package (`geth` vs `geth-alltools`) **(??)**
 
+  
 We need to fetch the following information:
 
-- `GETH_PKG`: relevant package (`geth` vs `geth-alltools`)
-  - **How:** TODO
+
 - `GETH_COMMIT`: geth commit given version
-  - **How:** TODO
-- `GO_FLAGS`: additional go flags needed for build
-  - **How:** TODO, found in travis.yml
+  - **How:** `go version -m geth`
+- `GO_VERSION`: Go compiler version
+  - **How:** `go version -m geth`
+- `BUILD_FLAGS`: additional go flags needed for build
+  - **How:** get from travis.yml
 - GCC version
-  - With `readelf -p .comment geth`
+  - **How:** `readelf -p .comment geth`
