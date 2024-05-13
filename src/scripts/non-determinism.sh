@@ -42,7 +42,7 @@ if [ "$md5_reproduce" != "$md5_reference" ]; then
     echo "Binaries mismatch."
     echo "Writing report to $REPORT_DIR/non-determinism-$ND_CASE.md"
     docker cp -q "$CONTAINER_ID":/non-determinism.md "$REPORT_DIR/non-determinism-$ND_CASE.md"
-    echo "You can run diffoscope with 'cd ./bin && docker run --rm -t -w '$(pwd)' -v '$(pwd)':'$(pwd)':rw registry.salsa.debian.org/reproducible-builds/diffoscope --progress geth-reference geth-reproduce'"
+    echo "You can run diffoscope with 'cd ./bin && docker run --rm -t -w '\$(pwd)' -v '\$(pwd)':'\$(pwd)':rw registry.salsa.debian.org/reproducible-builds/diffoscope --progress geth-reference geth-reproduce'"
 else
     if [ "$md5_reproduce" = "" ]; then
         { echo "Error: no binary produced."; exit 1; }
