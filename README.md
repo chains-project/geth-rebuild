@@ -1,8 +1,33 @@
 # geth-rebuild
 
-A rebuilder for geth
+A rebuilder for [geth](https://github.com/ethereum/go-ethereum/).
 
-# State
+
+## Usage
+
+### Verifying a geth binary
+
+TBD.
+
+### Cases of non-determinism
+
+When reproducing an artifact, cases of non-determinism need to be controlled. 
+
+In `./reports` three cases are shown:
+- date embedding
+- path embedding
+- differing gcc versions
+
+
+>[!TIP]
+>You can reproduce these yourself by running
+>
+>`./src/scripts/non-determinism.sh <case date/gcc/path> <docker tag>`
+>
+>E.g. `./src/scripts/non-determinism.sh path p`
+
+
+## State
 
 What has been bit-for-bit reproduced?
 
@@ -29,9 +54,9 @@ What has been bit-for-bit reproduced?
   - Docker images  (probably will not attempt)
   - ubuntu PPAs, homebrew etc.  (probably will not attempt)
 
-# Rebuilding a geth binary
+## Reproducing a geth binary
 
-## Build Inputs
+### Build Inputs
 
 When reproducing a geth binary, we need the correct **source code** and **build configurations** to reproduce the binary.
 
