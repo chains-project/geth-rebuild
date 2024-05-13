@@ -11,7 +11,7 @@ What has been bit-for-bit reproduced?
 - `/cmd/geth` binaries for Linux
   - amd64 version 1.14.3 ✅
 
-**In a locally reproduced Travis pipeline...***
+**In a locally reproduced Travis pipeline...**
 
 - `/cmd/geth` binaries for Linux
   - amd64 ✅
