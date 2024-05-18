@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ $# -ne 2 ]; then
-    echo "Usage: $0 <non-determinism case (date/gcc/path)> <docker tag>"
+    echo "Usage: $0 <non-determinism case (buildid/date/gcc/path)> <docker tag>"
     exit 1
 fi
 
@@ -31,9 +31,15 @@ echo "Copying binaries..."
 docker cp -q "$CONTAINER_ID":/bin/geth-reference "$OUTPUT_DIR"
 docker cp -q "$CONTAINER_ID":/bin/geth-reproduce "$OUTPUT_DIR"
 
-# check binary md5s and diff if neq
-md5_reference=$(md5 "$OUTPUT_DIR"/geth-reference | awk '{print $NF}')
-md5_reproduce=$(md5 "$OUTPUT_DIR"/geth-reproduce | awk '{print $NF}')
+# check binary md5
+if [ "$OS" = 'Linux' ]; then
+    md5_reference=$(md5sum "$(pwd)"/bin/geth-reference | awk '{print $1}')
+    md5_reproduce=$(md5sum "$(pwd)"/bin/geth-reproduce | awk '{print $1}')
+else # assume Darwin...
+    md5_reference=$(md5 "$(pwd)"/bin/geth-reference | awk '{print $NF}')
+    md5_reproduce=$(md5 "$(pwd)"/bin/geth-reproduce | awk '{print $NF}')
+fi
+
 echo "First build has hash $md5_reference"
 echo "Second build has hash $md5_reproduce"
 
@@ -45,7 +51,7 @@ if [ "$md5_reproduce" != "$md5_reference" ]; then
     echo "You can run diffoscope with 'cd ./bin && docker run --rm -t -w '\$(pwd)' -v '\$(pwd)':'\$(pwd)':rw registry.salsa.debian.org/reproducible-builds/diffoscope --progress geth-reference geth-reproduce'"
 else
     if [ "$md5_reproduce" = "" ]; then
-        { echo "Error: no binary produced."; exit 1; }
+        echo "Error: no binaries produced."
     else
         echo "Binaries match."
     fi

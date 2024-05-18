@@ -2,7 +2,6 @@
 
 A rebuilder for [geth](https://github.com/ethereum/go-ethereum/).
 
-
 ## Usage
 
 ### Verifying a geth binary
@@ -11,21 +10,19 @@ TBD.
 
 ### Cases of non-determinism
 
-When reproducing an artifact, cases of non-determinism need to be controlled. 
+When reproducing an artifact, cases of non-determinism need to be controlled.
 
-In `./reports` three cases are shown:
+In `./reports` four cases are shown:
+
+- build id embedding
 - date embedding
 - path embedding
 - differing gcc versions
 
-
->[!TIP]
->You can reproduce these yourself by running
+> [!TIP]
+> You can reproduce these yourself with `./scripts/non-determinism.sh <case (buildid/date/gcc/path)> <docker tag>`
 >
->`./src/scripts/non-determinism.sh <case date/gcc/path> <docker tag>`
->
->E.g. `./src/scripts/non-determinism.sh path p`
-
+> E.g. `./scripts/non-determinism.sh path p`
 
 ## State
 
@@ -39,6 +36,7 @@ What has been bit-for-bit reproduced?
 **In a locally reproduced Travis pipeline...**
 
 - `/cmd/geth` binaries for Linux
+
   - amd64 ✅
   - 386 ✅
   - arm5 ✅
@@ -46,13 +44,12 @@ What has been bit-for-bit reproduced?
   - arm7 🟡
   - arm64 🟡
 
-
 - Not attempted ❌
   - Linux geth-alltools releases
   - OSX releases (probably will not attempt)
   - Windows releases (probably will not attempt)
-  - Docker images  (probably will not attempt)
-  - ubuntu PPAs, homebrew etc.  (probably will not attempt)
+  - Docker images (probably will not attempt)
+  - ubuntu PPAs, homebrew etc. (probably will not attempt)
 
 ## Reproducing a geth binary
 
