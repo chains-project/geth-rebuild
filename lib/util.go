@@ -1,25 +1,31 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 // Runs command and exits if encountering error.
-func RunCommand(dir string, cmd string, args ...string) {
+func RunCommand(dir string, cmd string, args ...string) (out string) {
 	exeCmd := exec.Command(cmd, args...)
-	exeCmd.Dir = dir
+	exeCmd.Dir = dir // run command in dir
+
+	// catch out in buffer
+	var outBuffer bytes.Buffer
+	exeCmd.Stdout = &outBuffer
+
 	fmt.Println("[CMD] ", printArgs(exeCmd.Args))
-	exeCmd.Stderr = os.Stderr
-	exeCmd.Stdout = os.Stdout
 	if err := exeCmd.Run(); err != nil {
 		log.Fatal(err)
 	}
+	return outBuffer.String()
 }
 
 // Geth function copying.
@@ -52,4 +58,31 @@ func ValidParams(osArch string, gethVersion string) error {
 		return fmt.Errorf("<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4")
 	}
 	return nil
+}
+
+func GetRootDir() (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	dir := wd
+	for !strings.HasSuffix(dir, "geth-rebuild") {
+		dir = filepath.Dir(dir)
+		if dir == "/" {
+			return "", fmt.Errorf("error. cannot find root geth-rebuild in '%s'", wd)
+		}
+	}
+
+	return dir, nil
+}
+
+func GetArchId(osArch string) string {
+	arch := strings.Split(osArch, "-")[1]
+
+	if strings.HasPrefix(arch, "arm") && arch != "arm64" {
+		armVersion := strings.TrimLeft(arch, "arm")
+		return fmt.Sprintf("ARM=%s", armVersion)
+	} else {
+		return arch
+	}
 }
