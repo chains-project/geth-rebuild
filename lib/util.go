@@ -81,8 +81,32 @@ func GetArchId(osArch string) string {
 
 	if strings.HasPrefix(arch, "arm") && arch != "arm64" {
 		armVersion := strings.TrimLeft(arch, "arm")
-		return fmt.Sprintf("ARM=%s", armVersion)
+		return fmt.Sprintf("GOARM=%s", armVersion)
 	} else {
 		return arch
 	}
+}
+
+func GetBuildArgs(file string, archId string) string {
+	f, err := os.ReadFile(file)
+	if err != nil {
+		fmt.Printf("error reading file %s: %v", file, err)
+		os.Exit(1)
+	}
+
+	reGoARM := fmt.Sprintf(`%s.*go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archId))       // GOARM=[5-7] ... go run ...
+	reArch := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archId)) // go run ... -arch (386|arm64) ...
+	pat := reGoARM + `|` + reArch
+
+	//fmt.Printf("\nRegexp pattern:		%v", pat)
+	re := regexp.MustCompile(pat)
+	match := re.Find(f)
+	buildCmd := string(match)
+	if buildCmd == "" {
+		buildCmd = "go run build/ci.go install -dlgo"
+	}
+	fmt.Printf("\nBuild command: 	%s\n", buildCmd)
+
+	return buildCmd
+
 }

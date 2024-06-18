@@ -26,6 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 	gethDir := rootDir + "/tmp/go-ethereum"
+	travisPath := gethDir + "/.travis.yml"
 
 	checkoutVersion := "v" + gethVersion
 
@@ -50,7 +51,10 @@ func main() {
 	fmt.Printf("\nURL:		%s\n", url)
 
 	fmt.Printf("\n[RETRIEVING BUILD COMMANDS]\n")
-	archId := util.GetArchId(osArch) // todo fix
+
+	archId := util.GetArchId(osArch) // todo fix (?)
 	fmt.Printf("\nArch Id:	%s\n", archId)
+
+	args := util.GetBuildArgs(travisPath, archId)
 
 }
