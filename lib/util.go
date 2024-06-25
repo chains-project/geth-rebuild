@@ -12,6 +12,36 @@ import (
 	"strings"
 )
 
+var archIds = map[string]string{
+	"linux-amd64": "amd64",
+	"linux-386":   "386",
+	"linux-arm64": "arm64",
+	"linux-arm5":  "GOARM=5",
+	"linux-arm6":  "GOARM=6",
+	"linux-arm7":  "GOARM=7",
+}
+
+// todo? retrieve from travis yml?
+var compilers = map[string]string{
+	"linux-amd64": "gcc-multilib",
+	"linux-386":   "gcc-multilib",
+	"linux-arm64": "gcc-aarch64-linux-gnu",
+	"linux-arm5":  "gcc-arm-linux-gnueabi",
+	"linux-arm6":  "gcc-arm-linux-gnueabi",
+	"linux-arm7":  "gcc-arm-linux-gnueabihf",
+}
+
+var archSpecificPackages = map[string]string{
+	"linux-amd64": "",
+	"linux-386":   "",
+	"linux-arm64": "libc6-dev-arm64-cross",
+	"linux-arm5":  "libc6-dev-armel-cross",
+	"linux-arm6":  "libc6-dev-armel-cross",
+	"linux-arm7":  "libc6-dev-armhf-cross",
+}
+
+var commonPackages = []string{"git", "ca-certificates", "wget"}
+
 // Runs command and exits if encountering error.
 func RunCommand(dir string, cmd string, args ...string) (out string) {
 	exeCmd := exec.Command(cmd, args...)
@@ -21,7 +51,7 @@ func RunCommand(dir string, cmd string, args ...string) (out string) {
 	var outBuffer bytes.Buffer
 	exeCmd.Stdout = &outBuffer
 
-	fmt.Println("[CMD] ", printArgs(exeCmd.Args))
+	fmt.Println("[CMD]	", printArgs(exeCmd.Args))
 	if err := exeCmd.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -76,37 +106,75 @@ func GetRootDir() (string, error) {
 	return dir, nil
 }
 
-func GetArchId(osArch string) string {
-	arch := strings.Split(osArch, "-")[1]
-
-	if strings.HasPrefix(arch, "arm") && arch != "arm64" {
-		armVersion := strings.TrimLeft(arch, "arm")
-		return fmt.Sprintf("GOARM=%s", armVersion)
+// Returns common and architecture specific package for osArc.
+func getPackages(osArch string) []string {
+	archSpecific := archSpecificPackages[osArch]
+	if archSpecific == "" {
+		return commonPackages
 	} else {
-		return arch
+		all := append(commonPackages, archSpecific)
+		return all
 	}
 }
 
-func GetBuildArgs(file string, archId string) string {
-	f, err := os.ReadFile(file)
-	if err != nil {
-		fmt.Printf("error reading file %s: %v", file, err)
-		os.Exit(1)
+// Returns compiler for osArch as described by compilers map. Returns error if not found.
+func getCompiler(osArch string) (string, error) {
+	c := compilers[osArch]
+	if c == "" {
+		return "", fmt.Errorf("no compiler found for arch id %s", osArch)
+	}
+	return c, nil
+}
+
+// Retrieves build commands for osArch in given file. Returns error if not found.
+func getBuildCommand(osArch string, file string) (string, error) {
+	archID := archIds[osArch]
+
+	if archID == "" {
+		return "", fmt.Errorf("architecture id not found for %s", osArch)
 	}
 
-	reGoARM := fmt.Sprintf(`%s.*go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archId))       // GOARM=[5-7] ... go run ...
-	reArch := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archId)) // go run ... -arch (386|arm64) ...
+	if archID == "amd64" {
+		buildCmd := "go run build/ci.go install -dlgo"
+		return buildCmd, nil
+	}
+
+	f, err := os.ReadFile(file)
+	if err != nil {
+		return "", fmt.Errorf("error reading file %s: %v", file, err)
+	}
+
+	reGoARM := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archID))        // GOARM=[5-7] ... go run ...
+	reArch := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archID)) // go run ... -arch (386|arm64) ...
 	pat := reGoARM + `|` + reArch
 
-	//fmt.Printf("\nRegexp pattern:		%v", pat)
 	re := regexp.MustCompile(pat)
 	match := re.Find(f)
 	buildCmd := string(match)
-	if buildCmd == "" {
-		buildCmd = "go run build/ci.go install -dlgo"
-	}
-	fmt.Printf("\nBuild command: 	%s\n", buildCmd)
 
-	return buildCmd
+	if buildCmd == "" {
+		return "", fmt.Errorf("no build command found for archID %s in file `%s`", archID, file)
+	}
+
+	return buildCmd, nil
+}
+
+// Returns build configurations for osArch retrieved from build config file (travis.yml).
+func GetBuildConfigs(osArch string, file string) (compiler string, cmd string, packages []string, err error) {
+
+	compiler, err = getCompiler(osArch)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	cmd, err = getBuildCommand(osArch, file)
+
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	packages = getPackages(osArch)
+
+	return compiler, cmd, packages, nil
 
 }

@@ -40,21 +40,28 @@ func main() {
 	util.RunCommand(gethDir, "git", "fetch")
 	util.RunCommand(gethDir, "git", "checkout", checkoutVersion)
 
-	fmt.Printf("\n[CONSTRUCTING URL FOR BINARY DOWNLOAD]\n")
+	fmt.Printf("\n[RETRIEVING BINARY DOWNLOAD URL]\n")
 	commit := util.RunCommand(rootDir, "git", "log", "-1", "--format=%H")
 	shortCommit := commit[0:8]
 
-	fmt.Printf("\nCommit:		%sShort commit: 	%s", commit, shortCommit)
+	fmt.Printf("\nCommit:		%s", commit)
 
 	targetPackage := "geth-" + osArch + "-" + gethVersion + "-" + shortCommit
 	url := "https://gethstore.blob.core.windows.net/builds/" + targetPackage + ".tar.gz"
 	fmt.Printf("\nURL:		%s\n", url)
 
+	// fetch binary.
+
 	fmt.Printf("\n[RETRIEVING BUILD COMMANDS]\n")
 
-	archId := util.GetArchId(osArch) // todo fix (?)
-	fmt.Printf("\nArch Id:	%s\n", archId)
+	compiler, cmd, packages, err := util.GetBuildConfigs(osArch, travisPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Compiler:	%s\nPackages:	%q\nBuild cmd:	%s\n", compiler, packages, cmd)
 
-	args := util.GetBuildArgs(travisPath, archId)
+	// standards apt-get -yq --no-install-suggests --no-install-recommends --force-yes install [pkgs]
+
+	//PERHAPS: - sudo ln -s /usr/include/asm-generic /usr/include/asm
 
 }
