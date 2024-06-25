@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var archIds = map[string]string{
@@ -176,5 +177,60 @@ func GetBuildConfigs(osArch string, file string) (compiler string, cmd string, p
 	packages = getPackages(osArch)
 
 	return compiler, cmd, packages, nil
+}
 
+// Checks if Docker is currently running.
+func isDockerRunning() bool {
+	cmd := exec.Command("docker", "info")
+	err := cmd.Run()
+	return err == nil
+}
+
+// Opens Docker application on system.
+func openDocker() error {
+	cmd := exec.Command("open", "-a", "Docker") // todo... arch specific command.
+	fmt.Println("[CMD]	", printArgs(cmd.Args))
+	return cmd.Run()
+}
+
+// Ensures Docker is running on system, or returns error.
+func EnsureDocker() error {
+	if !isDockerRunning() {
+		fmt.Println("Docker is not running. Opening Docker...")
+		err := openDocker()
+		if err != nil {
+			return fmt.Errorf("failed to start docker")
+		}
+
+		start := time.Now()
+		timeout := start.Add(75 * time.Second)
+
+		for !isDockerRunning() {
+			fmt.Println("Waiting for Docker to start...")
+			if time.Now().After(timeout) {
+				return fmt.Errorf("failed to start docker")
+			}
+			time.Sleep(5 * time.Second)
+		}
+
+	}
+	fmt.Println("Docker is running.")
+	return nil
+}
+
+func RunDockerBuild(buildArgs map[string]string, dockerPath string) {
+	dockerFile := dockerPath + "/Dockerfile"
+
+	// set docker build args
+	cmdArgs := []string{"build", "-t", "test-tag"}
+	for key, value := range buildArgs {
+		cmdArgs = append(cmdArgs, fmt.Sprintf(`--build-arg="%s=%s"`, key, value))
+	}
+	cmdArgs = append(cmdArgs, "-", "<", dockerFile)
+	// for _, k := range cmdArgs {
+	// 	fmt.Printf("%q\n", k)
+	// }
+
+	o := RunCommand(dockerPath, "docker", cmdArgs...)
+	fmt.Println(o)
 }
