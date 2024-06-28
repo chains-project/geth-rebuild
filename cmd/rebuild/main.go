@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	util "github.com/chains-project/geth-rebuild/lib"
 )
@@ -49,7 +50,7 @@ func main() {
 
 	// 3. clone geth & checkout at version
 	fmt.Printf("\n[CLONING GO ETHEREUM SOURCES]\nos-arch		%s\ngeth version	%s\n\n", osArch, gethVersion)
-	util.RunCommand(cloneGeth, tmpDir, gethVersion)
+	//util.RunCommand(cloneGeth, tmpDir, gethVersion)
 
 	// 4. retrieve all necessary parameters for rebuilding in docker.
 	fmt.Printf("\n[RETRIEVING DOCKER BUILD PARAMETERS]\n")
@@ -64,17 +65,22 @@ func main() {
 		log.Fatal(err)
 	}
 
+	now := time.Now()
+	timestamp := now.Format("2006-01-02-15:04")
+
 	var dockerArgs = map[string]string{
 		"UBUNTU_VERSION": "focal",  // default
 		"GO_VERSION":     "1.22.0", // default
 		"C_COMPILER":     cc,
 		"GETH_VERSION":   gethVersion,
 		"OS_ARCH":        osArch,
+		"TAG":            fmt.Sprintf("rebuild-geth-v%s-%s-%s", gethVersion, osArch, timestamp),
 		"GETH_COMMIT":    gethCommit,
 		"PACKAGES":       strings.Join(packages, " "),
 		"REFERENCE_URL":  referenceURL,
 		"BUILD_CMD":      buildCmd,
 		"ELF_TARGET":     "elf64-x86-64", // TODO fix arch specific elfer.
+		"DOCKER_FILE":    rebuildDir + "/Dockerfile",
 	}
 
 	fmt.Print("\n")
@@ -83,8 +89,12 @@ func main() {
 	}
 
 	// 5. start verification in docker container
-	fmt.Printf("\n[STARTING DOCKER BUILD]\n")
+	fmt.Printf("\n[STARTING DOCKER REBUILD]\n")
 	util.RunCommand(startDocker)
-	//util.RunCommand(rebuild)
-	//util.RunDockerBuild(dockerArgs, dockerPath)
+	for k, v := range dockerArgs {
+		if err := os.Setenv(k, v); err != nil {
+			log.Fatal(err)
+		}
+	}
+	util.RunCommand(rebuild)
 }
