@@ -9,14 +9,14 @@ import (
 	util "github.com/chains-project/geth-rebuild/lib"
 )
 
-var BuildArgs = map[string]string{
+var rebuildArgs = map[string]string{
 	"UBUNTU_VERSION": "focal",  // default
 	"GO_VERSION":     "1.22.0", // default
 	"C_COMPILER":     "",
 	"GETH_VERSION":   "",
 	"OS_ARCH":        "",
 	"GETH_COMMIT":    "",
-	"BINARY_URL":     "",
+	"REFERENCE_URL":  "",
 	"BUILD_CMD":      "",
 	"ELF_TARGET":     "elf64-x86-64", // todo fix arch specific.
 }
@@ -29,19 +29,17 @@ func main() {
 	}
 
 	// TODO how runtime.GOOS affects commands
-	// 0. set and validate parameters
+	// 1. Validate input parameters
 	osArch := os.Args[1]
 	gethVersion := os.Args[2]
-	// repoURL := "https://github.com/ethereum/go-ethereum.git"
-	// branch := "master"
-	checkoutVersion := "v" + gethVersion
-
-	// validate input parameters
 	if err := util.ValidParams(osArch, gethVersion); err != nil {
 		log.Fatal(err)
 	}
 
-	// directory paths
+	// 2. Set parameters
+	// repoURL := "https://github.com/ethereum/go-ethereum.git"
+	// branch := "master"
+	checkoutVersion := "v" + gethVersion
 	rootDir, err := util.GetRootDir()
 	if err != nil {
 		log.Fatal(err)
@@ -50,45 +48,46 @@ func main() {
 	travisPath := gethDir + "/.travis.yml"
 	dockerPath := rootDir + "/docker/rebuilder"
 
-	// 1. clone geth
+	// 3. clone geth & checkout at version
 	fmt.Printf("\n[CLONING GO ETHEREUM SOURCES]\nos-arch		%s\ngeth version	%s\n\n", osArch, gethVersion)
 	//util.RunCommand("rm", "-r", "-f", gethDir)
 	//util.RunCommand("git", "clone", "--branch", branch, repoURL, gethDir) // TODO: shallow copy. Decide proper --depth OR use --single-branch
 	util.RunCommand(gethDir, "git", "fetch")
 	util.RunCommand(gethDir, "git", "checkout", checkoutVersion)
 
-	// 2. get hash commit at version for download url
-	fmt.Printf("\n[RETRIEVING BINARY DOWNLOAD URL]\n")
-	gethCommit := util.RunCommand(rootDir, "git", "log", "-1", "--format=%H")
-	gethCommit = strings.ReplaceAll(gethCommit, "\n", "")
-	shortCommit := gethCommit[0:8]
-	fmt.Printf("\nCommit:		%s", gethCommit)
-
-	targetPackage := "geth-" + osArch + "-" + gethVersion + "-" + shortCommit
-	binaryURL := "https://gethstore.blob.core.windows.net/builds/" + targetPackage + ".tar.gz"
-	fmt.Printf("\nURL:		%s\n", binaryURL)
-
-	// 3. retrieve necessary build configurations
-	fmt.Printf("\n[RETRIEVING BUILD CONFIGURATIONS]\n")
+	// 4. retrieve all necessary parameters for rebuilding in docker.
+	fmt.Printf("\n[RETRIEVING DOCKER BUILD PARAMETERS]\n")
+	
+	// commit at version
+	gethCommit := util.GetCommit(gethDir)
+	rebuildArgs["GETH_COMMIT"] = gethCommit
+	
+	// url for downloading reference binary
+	referenceURL := util.GetDownloadURL(osArch, gethVersion, gethCommit)
+	rebuildArgs["REFERENCE_URL"] = referenceURL
+	
+	// build configurations
 	cc, buildCmd, packages, err := util.GetBuildConfigs(osArch, travisPath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	BuildArgs["GETH_VERSION"] = gethVersion
-	BuildArgs["OS_ARCH"] = osArch
-	BuildArgs["GETH_COMMIT"] = gethCommit
-	BuildArgs["BINARY_URL"] = binaryURL
-	BuildArgs["BUILD_CMD"] = buildCmd
-	BuildArgs["PACKAGES"] = strings.Join(packages, " ")
-	BuildArgs["C_COMPILER"] = cc
-	for k, v := range BuildArgs {
+	
+	rebuildArgs["GETH_VERSION"] = gethVersion
+	rebuildArgs["OS_ARCH"] = osArch
+	rebuildArgs["BUILD_CMD"] = buildCmd
+	rebuildArgs["PACKAGES"] = strings.Join(packages, " ")
+	rebuildArgs["C_COMPILER"] = cc
+	
+	// print all docker args
+	fmt.Print("\n")
+	for k, v := range rebuildArgs {
 		fmt.Println(k + ":	" + v)
 	}
 	// TODO go version
 	// TODO ubuntu distribution
 
-	// 4. start verification in docker container
+	// 5. start verification in docker container
 	fmt.Printf("\n[STARTING DOCKER BUILD]\n")
 	util.EnsureDocker()
-	util.RunDockerBuild(BuildArgs, dockerPath)
+	util.RunDockerBuild(rebuildArgs, dockerPath)
 }

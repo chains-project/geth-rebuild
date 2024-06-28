@@ -107,6 +107,21 @@ func GetRootDir() (string, error) {
 	return dir, nil
 }
 
+// Returns commit hash at latest commit in dir.
+func GetCommit(dir string) string {
+	var commit string = RunCommand(dir, "git", "log", "-1", "--format=%H")
+	commit = strings.ReplaceAll(commit, "\n", "")
+	return commit
+}
+
+// Returns link to download geth binary reference build.
+func GetDownloadURL(osArch string, gethVersion string, commit string) string {
+	shortCommit := commit[0:8]
+	targetPackage := "geth-" + osArch + "-" + gethVersion + "-" + shortCommit
+	url := "https://gethstore.blob.core.windows.net/builds/" + targetPackage + ".tar.gz"
+	return url
+}
+
 // Returns common and architecture specific package for osArc.
 func getPackages(osArch string) []string {
 	archSpecific := archSpecificPackages[osArch]
