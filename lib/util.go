@@ -237,13 +237,13 @@ func GetBuildConfigs(osArch string, file string) (cc string, cmd string, package
 // 	return nil
 // }
 
-// func RunDockerBuild(buildArgs map[string]string, dockerPath string) {
-// 	// set docker build args
-// 	cmdArgs := []string{"build", "-t", "test-tag"}
-// 	for key, value := range buildArgs {
-// 		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
-// 	}
-// 	cmdArgs = append(cmdArgs, dockerPath)
-// 	o := RunCommand("docker", cmdArgs...)
-// 	fmt.Println(o)
-// }
+func RunDockerBuild(buildArgs map[string]string, dockerPath string) {
+	// set docker build args
+	cmdArgs := []string{"build", "-t", buildArgs["TAG"]}
+	for key, value := range buildArgs {
+		cmdArgs = append(cmdArgs, fmt.Sprint("--build-arg=" + key + "=" + value)) // TODO wordsplitting....
+	}
+	cmdArgs = append(cmdArgs, dockerPath)
+	o := RunCommand("docker", cmdArgs...)
+	fmt.Println(o)
+}

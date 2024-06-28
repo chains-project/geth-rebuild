@@ -76,6 +76,7 @@ func main() {
 		"OS_ARCH":        osArch,
 		"TAG":            fmt.Sprintf("rebuild-geth-v%s-%s-%s", gethVersion, osArch, timestamp),
 		"GETH_COMMIT":    gethCommit,
+		"SHORT_COMMIT":   gethCommit[0:8],
 		"PACKAGES":       strings.Join(packages, " "),
 		"REFERENCE_URL":  referenceURL,
 		"BUILD_CMD":      buildCmd,
@@ -91,10 +92,12 @@ func main() {
 	// 5. start verification in docker container
 	fmt.Printf("\n[STARTING DOCKER REBUILD]\n")
 	util.RunCommand(startDocker)
-	for k, v := range dockerArgs {
-		if err := os.Setenv(k, v); err != nil {
-			log.Fatal(err)
-		}
-	}
-	util.RunCommand(rebuild)
+	util.RunDockerBuild(dockerArgs, rebuildDir)
+
+	// for k, v := range dockerArgs {
+	// 	if err := os.Setenv(k, v); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }
+	// util.RunCommand(rebuild)
 }
