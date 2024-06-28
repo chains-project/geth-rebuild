@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -13,7 +14,7 @@ import (
 	"time"
 )
 
-var archIds = map[string]string{
+var osArchPatterns = map[string]string{
 	"linux-amd64": "amd64",
 	"linux-386":   "386",
 	"linux-arm64": "arm64",
@@ -22,7 +23,7 @@ var archIds = map[string]string{
 	"linux-arm7":  "GOARM=7",
 }
 
-// todo? retrieve from travis yml?
+// TODO REMOVE HARD CODING by retrieving from travis yml?
 var compilers = map[string]string{
 	"linux-amd64": "gcc-multilib",
 	"linux-386":   "gcc-multilib",
@@ -32,6 +33,7 @@ var compilers = map[string]string{
 	"linux-arm7":  "gcc-arm-linux-gnueabihf",
 }
 
+// TODO REMOVE HARD CODING by retrieving from travis yml?
 var archSpecificPackages = map[string]string{
 	"linux-amd64": "",
 	"linux-386":   "",
@@ -44,13 +46,14 @@ var archSpecificPackages = map[string]string{
 var commonPackages = []string{"git", "ca-certificates", "wget"}
 
 // Runs command and exits if encountering error.
-func RunCommand(dir string, cmd string, args ...string) (out string) {
+func RunCommand(cmd string, args ...string) (out string) {
 	exeCmd := exec.Command(cmd, args...)
-	exeCmd.Dir = dir // run command in dir
+	// exeCmd.Dir = dir
 
-	// catch out in buffer
 	var outBuffer bytes.Buffer
-	exeCmd.Stdout = &outBuffer
+	multiWriter := io.MultiWriter(os.Stdout, &outBuffer)
+	exeCmd.Stdout = multiWriter
+	exeCmd.Stderr = multiWriter
 
 	fmt.Println("[CMD]	", printArgs(exeCmd.Args))
 	if err := exeCmd.Run(); err != nil {
@@ -91,6 +94,7 @@ func ValidParams(osArch string, gethVersion string) error {
 	return nil
 }
 
+// Returns root path for get-rebuild
 func GetRootDir() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -109,7 +113,9 @@ func GetRootDir() (string, error) {
 
 // Returns commit hash at latest commit in dir.
 func GetCommit(dir string) string {
-	var commit string = RunCommand(dir, "git", "log", "-1", "--format=%H")
+	gitDir := fmt.Sprintf("--git-dir=%s/.git", dir)
+	workTree := fmt.Sprintf("--work-tree=%s", dir)
+	var commit string = RunCommand("git", gitDir, workTree, "log", "-1", "--format=%H")
 	commit = strings.ReplaceAll(commit, "\n", "")
 	return commit
 }
@@ -144,10 +150,11 @@ func getCompiler(osArch string) (string, error) {
 
 // Retrieves build commands for osArch in given file. Returns error if not found.
 func getBuildCommand(osArch string, file string) (string, error) {
-	archID := archIds[osArch]
+	archID := osArchPatterns[osArch]
 
 	if archID == "" {
-		return "", fmt.Errorf("architecture id not found for %s", osArch)
+		err := fmt.Errorf("architecture id not found for %s", osArch)
+		return "", err
 	}
 
 	if archID == "amd64" {
@@ -157,41 +164,41 @@ func getBuildCommand(osArch string, file string) (string, error) {
 
 	f, err := os.ReadFile(file)
 	if err != nil {
-		return "", fmt.Errorf("error reading file %s: %v", file, err)
+		err = fmt.Errorf("error reading file %s: %v", file, err)
+		return "", err
 	}
 
-	reGoARM := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archID))        // GOARM=[5-7] ... go run ...
-	reArch := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archID)) // go run ... -arch (386|arm64) ...
-	pat := reGoARM + `|` + reArch
+	goarmPattern := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archID))        // pattern: GOARM=[5-7] ... go run ...
+	archPattern := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archID)) // pattern: go run ... -arch (386|arm64) ...
+	pat := goarmPattern + `|` + archPattern
 
 	re := regexp.MustCompile(pat)
 	match := re.Find(f)
 	buildCmd := string(match)
 
 	if buildCmd == "" {
-		return "", fmt.Errorf("no build command found for archID %s in file `%s`", archID, file)
+		err = fmt.Errorf("no build command found for archID %s in file `%s`", archID, file)
+		return "", err
 	}
-
 	return buildCmd, nil
 }
 
 // Returns build configurations for osArch retrieved from build config file (travis.yml).
-func GetBuildConfigs(osArch string, file string) (compiler string, cmd string, packages []string, err error) {
+func GetBuildConfigs(osArch string, file string) (cc string, cmd string, packages []string, err error) {
 
-	compiler, err = getCompiler(osArch)
+	cc, err = getCompiler(osArch)
 	if err != nil {
-		return "", "", nil, err
+		return
 	}
 
 	cmd, err = getBuildCommand(osArch, file)
 
 	if err != nil {
-		return "", "", nil, err
+		return
 	}
 
 	packages = getPackages(osArch)
-
-	return compiler, cmd, packages, nil
+	return
 }
 
 // Checks if Docker is currently running.
@@ -234,18 +241,18 @@ func EnsureDocker() error {
 }
 
 func RunDockerBuild(buildArgs map[string]string, dockerPath string) {
-	dockerFile := dockerPath + "/Dockerfile"
+	//dockerFile := dockerPath + "/Dockerfile"
 
 	// set docker build args
 	cmdArgs := []string{"build", "-t", "test-tag"}
 	for key, value := range buildArgs {
-		cmdArgs = append(cmdArgs, fmt.Sprintf(`--build-arg="%s=%s"`, key, value))
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
 	}
-	cmdArgs = append(cmdArgs, "-", "<", dockerFile)
+	cmdArgs = append(cmdArgs, dockerPath)
 	// for _, k := range cmdArgs {
 	// 	fmt.Printf("%q\n", k)
 	// }
 
-	o := RunCommand(dockerPath, "docker", cmdArgs...)
+	o := RunCommand("docker", cmdArgs...)
 	fmt.Println(o)
 }
