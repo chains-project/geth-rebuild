@@ -2,58 +2,38 @@
 
 A rebuilder for [geth](https://github.com/ethereum/go-ethereum/).
 
+Reproduce and verify source-to-binary semantics of a geth Linux binary.
+
+## Build from source
+
+`go build ./cmd/rebuild -o ./bin/rebuild`
+
 ## Usage
 
-### Verifying a geth binary
+`cd ./bin`
 
-TBD.
+`./rebuild <os-arch> <version>`
 
-### Cases of non-determinism
+For example, `./rebuild linux-amd64 1.14.3`
+
+
+## Cases of Unreproducibility 
 
 When reproducing an artifact, cases of non-determinism need to be controlled.
 
-In `./reports` four cases are shown:
+In `./reports` four cases found for geth are shown:
 
-- build id embedding
-- date embedding
-- path embedding
-- differing gcc versions
+- **buildid**: embedding of unreproducible build ids
+- **date**: conditional embedding of release date
+- **path**: embedding of absolute system paths
+- **gcc**: differing gcc versions using identical build settings
 
 > [!TIP]
-> You can reproduce these yourself with `./scripts/non-determinism.sh <case (buildid/date/gcc/path)> <docker tag>`
->
-> E.g. `./scripts/non-determinism.sh path p`
+> Reproduce these cases using `TODO PATH <case> <docker tag>`
+> E.g. `TODO path my-path-tag`
 
-## State
 
-What has been bit-for-bit reproduced?
-
-**Official geth binary releases...**
-
-- `/cmd/geth` binaries for Linux
-  - amd64 version 1.14.3 ✅
-
-**In a locally reproduced Travis pipeline...**
-
-- `/cmd/geth` binaries for Linux
-
-  - amd64 ✅
-  - 386 ✅
-  - arm5 ✅
-  - arm6 🟡 (assuming reproducible)
-  - arm7 🟡
-  - arm64 🟡
-
-- Not attempted ❌
-  - Linux geth-alltools releases
-  - OSX releases (probably will not attempt)
-  - Windows releases (probably will not attempt)
-  - Docker images (probably will not attempt)
-  - ubuntu PPAs, homebrew etc. (probably will not attempt)
-
-## Reproducing a geth binary
-
-### Build Inputs
+## Build Inputs
 
 When reproducing a geth binary, we need the correct **source code** and **build configurations** to reproduce the binary.
 
@@ -61,7 +41,7 @@ Given a certain...
 
 - `GETH_VERSION`: E.g. 1.14.0 or 1.14.1-unstable
 - `TARGET_ARCH`: target architecture, e.g. linux amd64
-- `GETH_PKG`: relevant package (`geth` vs `geth-alltools`) **(??)**
+- `GETH_PKG`: relevant package (`geth` vs `geth-alltools`)
 
 We need to fetch the following information:
 
@@ -73,3 +53,23 @@ We need to fetch the following information:
   - **How:** get from travis.yml
 - GCC version
   - **How:** `readelf -p .comment geth`
+
+
+## Limitations
+
+What can be bit-for-bit reproduced?
+
+Linux`/cmd/geth` binaries for Linux
+- amd64  ✅
+- 386    ✅
+- arm5   ✅
+- arm6   ✅
+- arm7   ✅
+- arm64  ✅
+
+Limitations/Not attempted ❌
+- Linux geth-alltools releases
+- OSX releases
+- Windows releases
+- Docker images
+- ubuntu PPAs, homebrew etc.
