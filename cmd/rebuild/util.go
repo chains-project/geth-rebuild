@@ -5,8 +5,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
-	util "github.com/chains-project/geth-rebuild/util"
+	util "github.com/chains-project/geth-rebuild/common"
 )
 
 var osArchPatterns = map[string]string{
@@ -40,13 +41,10 @@ var archSpecificPackages = map[string]string{
 
 var commonPackages = []string{"git", "ca-certificates", "wget"}
 
-// Validates input parameters to main program.
-func validParams(osArch string, gethVersion string) error {
-	osArchPattern := "^linux-(amd64|386|arm5|arm6|arm64|arm7)$"
-	versionPattern := "^[0-9]+.[0-9]+.[0-9]+$"
-
-	osArchRegex := regexp.MustCompile(osArchPattern)
-	versionRegex := regexp.MustCompile(versionPattern)
+// Validates input arguments to rebuild main program.
+func validArgs(osArch string, gethVersion string) error {
+	osArchRegex := regexp.MustCompile(`^linux-(amd64|386|arm5|arm6|arm64|arm7)$`)
+	versionRegex := regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
 
 	if !osArchRegex.MatchString(osArch) {
 		return fmt.Errorf("<os-arch> must be a valid linux target architecture\nExample: linux-amd64")
@@ -57,6 +55,16 @@ func validParams(osArch string, gethVersion string) error {
 	return nil
 }
 
+// Runs command chmod `permission` script for each script in `scripts`.
+func changePermissions(scripts []string, permission string) {
+	// TODO CLI - would like to cat files?
+	for _, script := range scripts {
+		//util.RunCommand("cat", script)
+		util.RunCommand("chmod", permission, script)
+		fmt.Printf("\nPermissions changed (%s) for file %s", permission, script)
+	}
+}
+
 // Returns commit hash at latest commit in dir.
 func getCommit(dir string) string {
 	gitDir := fmt.Sprintf("--git-dir=%s/.git", dir)
@@ -64,14 +72,6 @@ func getCommit(dir string) string {
 	var commit string = util.RunCommand("git", gitDir, workTree, "log", "-1", "--format=%H")
 	commit = strings.ReplaceAll(commit, "\n", "")
 	return commit
-}
-
-// Returns link to download geth binary reference build.
-func getDownloadURL(osArch string, gethVersion string, commit string) string {
-	shortCommit := commit[0:8]
-	targetPackage := "geth-" + osArch + "-" + gethVersion + "-" + shortCommit
-	url := "https://gethstore.blob.core.windows.net/builds/" + targetPackage + ".tar.gz"
-	return url
 }
 
 // Returns common and architecture specific package for osArc.
@@ -114,6 +114,7 @@ func getBuildCommand(osArch string, file string) (string, error) {
 		return "", err
 	}
 
+	// TODO ugly code
 	goarmPattern := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(archID))        // pattern: GOARM=[5-7] ... go run ...
 	archPattern := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(archID)) // pattern: go run ... -arch (386|arm64) ...
 	pat := goarmPattern + `|` + archPattern
@@ -131,68 +132,48 @@ func getBuildCommand(osArch string, file string) (string, error) {
 
 // Returns build configurations for osArch retrieved from build config file (travis.yml).
 func getBuildConfigs(osArch string, file string) (cc string, cmd string, packages []string, err error) {
-
 	cc, err = getCompiler(osArch)
 	if err != nil {
 		return
 	}
-
 	cmd, err = getBuildCommand(osArch, file)
-
 	if err != nil {
 		return
 	}
-
 	packages = getPackages(osArch)
 	return
 }
 
-// // Checks if Docker is currently running.
-// func isDockerRunning() bool {
-// 	cmd := exec.Command("docker", "info")
-// 	err := cmd.Run()
-// 	return err == nil
-// }
+func createDockerTag(gethVersion string, osArch string) string {
+	now := time.Now()
+	timestamp := now.Format("2006-01-02-15:04")
+	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s", gethVersion, osArch, timestamp)
+	return tag
+}
 
-// // Opens Docker application on system.
-// func openDocker() error {
-// 	cmd := exec.Command("open", "-a", "Docker") // todo... arch specific command.
-// 	fmt.Println("[CMD]	", printArgs(cmd.Args))
-// 	return cmd.Run()
-// }
+func (ba BuildArgs) ToMap() map[string]string {
+	return map[string]string{
+		"OS_ARCH":        ba.OsArch,
+		"GETH_VERSION":   ba.GethVersion,
+		"GETH_COMMIT":    ba.Commit,
+		"SHORT_COMMIT":   ba.ShortCommit,
+		"GO_VERSION":     ba.GoVersion,
+		"C_COMPILER":     ba.CC,
+		"UBUNTU_VERSION": ba.UbuntuVersion,
+		"PACKAGES":       ba.Packages,
+		"BUILD_CMD":      ba.BuildCmd,
+		"ELF_VERSION":    ba.ElfVersion,
+	}
+}
 
-// // Ensures Docker is running on system, or returns error.
-// func EnsureDocker() error {
-// 	if !isDockerRunning() {
-// 		fmt.Println("Docker is not running. Opening Docker...")
-// 		err := openDocker()
-// 		if err != nil {
-// 			return fmt.Errorf("failed to start docker")
-// 		}
-
-// 		start := time.Now()
-// 		timeout := start.Add(75 * time.Second)
-
-// 		for !isDockerRunning() {
-// 			fmt.Println("Waiting for Docker to start...")
-// 			if time.Now().After(timeout) {
-// 				return fmt.Errorf("failed to start docker")
-// 			}
-// 			time.Sleep(5 * time.Second)
-// 		}
-
-// 	}
-// 	fmt.Println("Docker is running.")
-// 	return nil
-// }
-
-func runDockerBuild(buildArgs map[string]string, dockerPath string) {
+// Starts a docker build for dockerfile at `dockerPath` with given `buildArgs`.
+func runDockerBuild(buildArgs map[string]string, dockerTag string, dockerPath string) {
 	// set docker build args
-	cmdArgs := []string{"build", "-t", buildArgs["TAG"]}
+	cmdArgs := []string{"build", "-t", dockerTag, "--progress=plain"} // TODO test tty
 	for key, value := range buildArgs {
-		cmdArgs = append(cmdArgs, fmt.Sprint("--build-arg="+key+"="+value)) // TODO wordsplitting....
+		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
 	}
 	cmdArgs = append(cmdArgs, dockerPath)
-	o := util.RunCommand("docker", cmdArgs...)
-	fmt.Println(o)
+	// run docker build
+	util.RunCommand("docker", cmdArgs...)
 }

@@ -6,98 +6,137 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
-	util "github.com/chains-project/geth-rebuild/util"
+	"github.com/chains-project/geth-rebuild/common"
 )
 
-func main() {
+type Paths struct {
+	RootDir    string
+	RebuildDir string
+	TmpDir     string
+	GethDir    string
+	ScriptDir  string
+	BinDir     string
+	TravisPath string
+	DockerPath string
+}
+
+type BuildArgs struct {
+	OsArch        string
+	GethVersion   string
+	Commit        string
+	ShortCommit   string
+	GoVersion     string
+	CC            string
+	UbuntuVersion string
+	Packages      string
+	BuildCmd      string
+	ElfVersion    string
+}
+
+// 	DockerTag  string
+//	DockerPath string
+
+func validateArgs() (osArch string, gethVersion string) {
 	if len(os.Args) != 3 {
 		fmt.Println("Usage: <os-arch> <geth version>")
 		fmt.Println("Example: linux-amd64 1.14.3") // TODO should change input params to os arch ?
 		os.Exit(1)
 	}
 
-	// 1. Validate input parameters
-	osArch := os.Args[1]
-	gethVersion := os.Args[2]
-	if err := validParams(osArch, gethVersion); err != nil {
+	osArch = os.Args[1]
+	gethVersion = os.Args[2]
+
+	if err := validArgs(osArch, gethVersion); err != nil {
 		log.Fatal(err)
 	}
-	// 2. Set directory parameters
-	rootDir, err := util.GetBaseDir("geth-rebuild")
+	return
+}
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	rebuildDir := rootDir + "/cmd/rebuild" // TODO fix path setting/retrieval more neat/logical.
-	tmpDir := rebuildDir + "/tmp"
-	gethDir := tmpDir + "/go-ethereum"
-	travisPath := tmpDir + "/.travis.yml"
+func main() {
+	// validate and set input args
+	osArch, gethVersion := validateArgs()
 
-	// 3. CHMOD scripts
-	cloneGeth := filepath.Join(rebuildDir, "scripts/clone_geth.sh")
-	startDocker := filepath.Join(rebuildDir, "scripts/start_docker.sh")
-	rebuild := filepath.Join(rebuildDir, "scripts/rebuild.sh")
-	var scripts = []string{cloneGeth, startDocker, rebuild}
-	fmt.Printf("\n[CHANGING FILE PERMISSIONS FOR EXECUTABLES]\n%q\n\n", scripts)
-
-	// TODO CLI - would like to cat files?
-	for _, script := range scripts {
-		//util.RunCommand("cat", script)
-		util.RunCommand("chmod", "+x", script)
+	buildArgs := BuildArgs{
+		OsArch:      osArch,
+		GethVersion: gethVersion,
 	}
 
-	// 3. clone geth & checkout at version
-	fmt.Printf("\n[CLONING GO ETHEREUM SOURCES]\nos-arch		%s\ngeth version	%s\n\n", osArch, gethVersion)
-	//util.RunCommand(cloneGeth, tmpDir, gethVersion)
-
-	// 4. retrieve all necessary parameters for rebuilding in docker.
-	fmt.Printf("\n[RETRIEVING DOCKER BUILD PARAMETERS]\n")
-	gethCommit := getCommit(gethDir) // TODO need integrity of commit retrieval?..
-	referenceURL := getDownloadURL(osArch, gethVersion, gethCommit)
-	cc, buildCmd, packages, err := getBuildConfigs(osArch, travisPath)
-
-	// TODO retrieve go version (major vs minor?)
-	// TODO ubuntu distribution
-
+	// set up dirs
+	rootDir, err := common.GetBaseDir("geth-rebuild")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	now := time.Now()
-	timestamp := now.Format("2006-01-02-15:04")
+	rebuildDir := filepath.Join(rootDir, "cmd", "rebuild")
+	tmpDir := filepath.Join(rebuildDir, "tmp")
+	gethDir := filepath.Join(tmpDir, "go-ethereum")
+	scriptDir := filepath.Join(rebuildDir, "scripts")
+	binDir := filepath.Join(rebuildDir, "bin")
+	travisPath := filepath.Join(tmpDir, ".travis.yml")
+	dockerPath := filepath.Join(rebuildDir, "Dockerfile")
 
-	var dockerArgs = map[string]string{
-		"UBUNTU_VERSION": "focal",  // default
-		"GO_VERSION":     "1.22.0", // default
-		"C_COMPILER":     cc,
-		"GETH_VERSION":   gethVersion,
-		"OS_ARCH":        osArch,
-		"TAG":            fmt.Sprintf("rebuild-geth-v%s-%s-%s", gethVersion, osArch, timestamp),
-		"GETH_COMMIT":    gethCommit,
-		"SHORT_COMMIT":   gethCommit[0:8],
-		"PACKAGES":       strings.Join(packages, " "),
-		"REFERENCE_URL":  referenceURL,
-		"BUILD_CMD":      buildCmd,
-		"ELF_TARGET":     "elf64-x86-64", // TODO fix arch specific elfer.
-		"DOCKER_FILE":    rebuildDir + "/Dockerfile",
+	paths := Paths{
+		RootDir:    rootDir,
+		RebuildDir: rebuildDir,
+		TmpDir:     tmpDir,
+		GethDir:    gethDir,
+		TravisPath: travisPath,
+		ScriptDir:  scriptDir,
+		BinDir:     binDir,
+		DockerPath: dockerPath,
 	}
 
-	fmt.Print("\n")
-	for k, v := range dockerArgs {
-		fmt.Println(k + ":	" + v)
+	// set up scripts
+	cloneGeth := filepath.Join(paths.ScriptDir, "clone.sh")
+	checkoutGeth := filepath.Join(paths.ScriptDir, "checkout.sh")
+	startDocker := filepath.Join(paths.ScriptDir, "start_docker.sh")
+	copyBinaries := filepath.Join(paths.ScriptDir, "copy_bin.sh")
+	compareBinaries := filepath.Join(paths.ScriptDir, "compare_bin.sh")
+
+	scripts := []string{
+		cloneGeth, checkoutGeth, startDocker, copyBinaries, compareBinaries,
 	}
+	changePermissions(scripts, "+x")
+
+	// clone geth & checkout at version
+	//fmt.Printf("\n[CLONING GO ETHEREUM SOURCES]\nos-arch		%s\ngeth version	%s\n\n", osArch, gethVersion)
+	common.RunCommand(cloneGeth, paths.TmpDir)
+	common.RunCommand(checkoutGeth, paths.GethDir, buildArgs.GethVersion)
+
+	// retrieve build arguments
+	//fmt.Printf("\n[RETRIEVING BUILD CONFIGURATIONS FROM SOURCES]\n")
+	// commit info
+	gethCommit := getCommit(paths.GethDir)
+	buildArgs.Commit = gethCommit
+	buildArgs.ShortCommit = gethCommit[0:8]
+
+	cc, buildCmd, packages, err := getBuildConfigs(buildArgs.OsArch, paths.TravisPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	buildArgs.CC = cc
+	buildArgs.BuildCmd = buildCmd
+	buildArgs.Packages = strings.Join(packages, " ")
+
+	buildArgs.GoVersion = "1.22.0"        // TODO
+	buildArgs.UbuntuVersion = "focal"     // TODO
+	buildArgs.ElfVersion = "elf64-x86-64" // TODO
+
+	// fmt.Print("\n")
+	// for k, v := range dockerArgs {
+	// 	fmt.Println(k + ":	" + v)
+	// }
+
+	dockerTag := createDockerTag(buildArgs.GethVersion, buildArgs.OsArch)
+	dockerPath = filepath.Join(paths.RebuildDir, "/Dockerfile")
 
 	// 5. start verification in docker container
-	fmt.Printf("\n[STARTING DOCKER REBUILD]\n")
-	util.RunCommand(startDocker)
-	runDockerBuild(dockerArgs, rebuildDir)
+	fmt.Printf("\n[STARTING REBUILD IN DOCKER]\n")
+	common.RunCommand(startDocker)
 
-	// for k, v := range dockerArgs {
-	// 	if err := os.Setenv(k, v); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }
-	// util.RunCommand(rebuild)
+	buildArgsMap := buildArgs.ToMap()
+	runDockerBuild(buildArgsMap, dockerTag, dockerPath)
+	common.RunCommand(copyBinaries, dockerTag, paths.BinDir) // TODO copy into specific dir
+	common.RunCommand(compareBinaries, paths.BinDir)
 }
