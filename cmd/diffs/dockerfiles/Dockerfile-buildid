@@ -1,0 +1,39 @@
+# build ids are embedded into binaries
+FROM ubuntu:focal
+
+RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget -yq --no-install-recommends
+
+RUN wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && \
+    rm -rf /usr/local/go && \
+    tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz && \
+    export PATH=$PATH:/usr/local/go/bin
+ENV PATH=$PATH:/usr/local/go/bin
+
+
+# reference build. v1.14.3
+RUN wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.14.3-ab48ba42.tar.gz && tar -xvf geth-linux-amd64-1.14.3-ab48ba42.tar.gz && \
+    cd geth-linux-amd64-1.14.3-ab48ba42 && \
+    strip geth && mv geth /bin/geth-reference
+
+# reproducing build
+RUN git clone --depth 1 --branch v1.14.3 https://github.com/ethereum/go-ethereum.git && cd go-ethereum && git fetch && \
+    git checkout ab48ba42f4f34873d65fd1737fabac5c680baff6 && \
+    CGO_ENABLED=1 go run ./build/ci.go install -dlgo ./cmd/geth/ && \
+    strip ./build/bin/geth && mv ./build/bin/geth /bin/geth-reproduce
+
+
+
+RUN cd /bin && echo "# geth reference build" > /non-determinism.md && \
+    go version -m geth-reference | head -n 1 >> /non-determinism.md && \
+    readelf --notes geth-reference | grep -A3 '.note.gnu.build-id' >> /non-determinism.md \
+    || echo "Error." >> /non-determinism.md && \
+    readelf --notes geth-reference | grep -A3 '.note.go.buildid' >> /non-determinism.md \
+    || echo "Error." >> /non-determinism.md 
+
+
+RUN cd /bin && echo "# geth reproducing build" >> /non-determinism.md && \
+    go version -m geth-reproduce | head -n 1 >> /non-determinism.md && \
+    readelf --notes geth-reproduce | grep -A3 '.note.gnu.build-id' >> /non-determinism.md \
+    || echo "Error." >> /non-determinism.md && \
+    readelf --notes geth-reproduce | grep -A3 '.note.go.buildid' >> /non-determinism.md \
+    || echo "Error." >> /non-determinism.md 

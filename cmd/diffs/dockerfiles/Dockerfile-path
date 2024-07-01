@@ -1,0 +1,37 @@
+# path: trimpath is broken in ubuntu:bionic: https://github.com/golang/go/issues/67011
+FROM ubuntu:bionic
+
+RUN apt-get update && apt-get install gcc-multilib git ca-certificates wget -yq --no-install-recommends
+
+RUN wget https://go.dev/dl/go1.22.1.linux-amd64.tar.gz && \
+	rm -rf /usr/local/go && \
+	tar -C /usr/local -xzf go1.22.1.linux-amd64.tar.gz && \
+	export PATH=$PATH:/usr/local/go/bin
+ENV PATH=$PATH:/usr/local/go/bin
+
+
+# reference build. v. 1.14.0, may 9 2024
+# TODO generalise to take in a certain geth version...
+RUN wget https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-1.14.0-87246f3c.tar.gz && tar -xvf geth-linux-amd64-1.14.0-87246f3c.tar.gz && \
+	cd geth-linux-amd64-1.14.0-87246f3c && \
+	strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
+	mkdir -p /bin && mv geth /bin/geth-reference
+
+# reproducing build 1.14.0
+RUN git clone --depth 1 --branch v1.14.0 https://github.com/ethereum/go-ethereum.git && cd go-ethereum && git fetch && \
+	git checkout -b reproduce 87246f3cbaf10f83f56bc4d45f0f3e36e83e71e9 && \
+	cd cmd/geth && CGO_ENABLED=1 go build -trimpath . && \
+	strip --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
+	mv geth /bin/geth-reproduce
+
+
+# TODO include  /etc/os-release ?
+RUN cd /bin && echo "# geth reference build" > /non-determinism.md && \
+	go version -m geth-reference | head -n 1 >> /non-determinism.md && \
+	echo "Running \`readelf -p .rodata geth-reference | grep /home/travis\`..." >> /non-determinism.md && \
+	readelf -p .rodata /bin/geth-reference | grep /home/travis >> /non-determinism.md  || echo "No match." >> /non-determinism.md 
+
+RUN cd /bin && echo "# geth reproducing build" >> /non-determinism.md && \
+	go version -m geth-reproduce | head -n 1 >> /non-determinism.md && \
+	echo "Running \`readelf -p .rodata geth-reproduce | grep /root/go/pkg\`..." >> /non-determinism.md && \
+	readelf -p .rodata geth-reproduce | grep /root/go/pkg >> /non-determinism.md || echo "No match." >> /non-determinism.md 

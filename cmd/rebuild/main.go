@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	util "github.com/chains-project/geth-rebuild/lib"
+	util "github.com/chains-project/geth-rebuild/util"
 )
 
 func main() {
@@ -21,11 +21,11 @@ func main() {
 	// 1. Validate input parameters
 	osArch := os.Args[1]
 	gethVersion := os.Args[2]
-	if err := util.ValidParams(osArch, gethVersion); err != nil {
+	if err := validParams(osArch, gethVersion); err != nil {
 		log.Fatal(err)
 	}
 	// 2. Set directory parameters
-	rootDir, err := util.GetRootDir()
+	rootDir, err := util.GetBaseDir("geth-rebuild")
 
 	if err != nil {
 		log.Fatal(err)
@@ -54,9 +54,9 @@ func main() {
 
 	// 4. retrieve all necessary parameters for rebuilding in docker.
 	fmt.Printf("\n[RETRIEVING DOCKER BUILD PARAMETERS]\n")
-	gethCommit := util.GetCommit(gethDir) // TODO need integrity of commit retrieval?..
-	referenceURL := util.GetDownloadURL(osArch, gethVersion, gethCommit)
-	cc, buildCmd, packages, err := util.GetBuildConfigs(osArch, travisPath)
+	gethCommit := getCommit(gethDir) // TODO need integrity of commit retrieval?..
+	referenceURL := getDownloadURL(osArch, gethVersion, gethCommit)
+	cc, buildCmd, packages, err := getBuildConfigs(osArch, travisPath)
 
 	// TODO retrieve go version (major vs minor?)
 	// TODO ubuntu distribution
@@ -92,7 +92,7 @@ func main() {
 	// 5. start verification in docker container
 	fmt.Printf("\n[STARTING DOCKER REBUILD]\n")
 	util.RunCommand(startDocker)
-	util.RunDockerBuild(dockerArgs, rebuildDir)
+	runDockerBuild(dockerArgs, rebuildDir)
 
 	// for k, v := range dockerArgs {
 	// 	if err := os.Setenv(k, v); err != nil {
