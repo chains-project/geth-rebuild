@@ -64,12 +64,14 @@ func main() {
 
 	dockerSpec := DockerSpec{
 		Dir: paths.Files.Docker,
-		FileHash: "", // TODO
 		BuildTag:  createDockerTag(buildInput.Artifact.Version, buildInput.Artifact.Os, buildInput.Artifact.Arch),
 	}
 
 
-	common.RunCommand(paths.Scripts.StartDocker)
+	_, err = common.RunCommand(paths.Scripts.StartDocker)
+	if err != nil {
+		log.Fatal(err)
+	}
 	
 	biMap := buildInput.ToMap()
 	runDockerBuild(biMap, dockerSpec.BuildTag, paths.Directories.Rebuild)

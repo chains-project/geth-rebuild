@@ -40,7 +40,8 @@ RUN wget ${REF_URL} && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id /bin/geth-reference
 
 # Copy geth repo and rebuild reference binary
-COPY ./tmp/go-ethereum /go-ethereum
+# TODO decide if should clone again
+COPY ./tmp/go-ethereum /go-ethereum 
 
 RUN echo ${BUILD_CMD}
 RUN cd go-ethereum && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \

@@ -29,8 +29,8 @@ type Directories struct {
 }
 
 type Files struct {
-	Travis string
-	Docker string
+	Travis    string
+	Docker    string
 	Checksums string
 }
 
@@ -68,18 +68,17 @@ type ToolchainSpec struct {
 
 type UbuntuSpec struct {
 	Dist      string
-	ElfTarget string // TODO move?
+	ElfTarget string
 	Packages  []string
 }
 
 type DockerSpec struct {
-	Dir string
-	FileHash string //TODO
-	BuildTag  string
+	Dir      string
+	BuildTag string
 }
 
-
-func setUpPaths() Paths { // TODO this is hard-coded...
+// Sets project paths.
+func setUpPaths() Paths {
 	baseDir, err := common.GetBaseDir("geth-rebuild")
 	if err != nil {
 		log.Fatal(err)
@@ -94,8 +93,8 @@ func setUpPaths() Paths { // TODO this is hard-coded...
 			Bin:     filepath.Join(baseDir, "cmd", "rebuild", "bin"),
 		},
 		Files: Files{
-			Travis: filepath.Join(baseDir, "cmd", "rebuild", "tmp", "go-ethereum", ".travis.yml"),
-			Docker: filepath.Join(baseDir, "cmd", "rebuild", "Dockerfile"),
+			Travis:    filepath.Join(baseDir, "cmd", "rebuild", "tmp", "go-ethereum", ".travis.yml"),
+			Docker:    filepath.Join(baseDir, "cmd", "rebuild", "Dockerfile"),
 			Checksums: filepath.Join(baseDir, "cmd", "rebuild", "tmp", "go-ethereum", "build", "checksums.txt"),
 		},
 		Scripts: Scripts{
@@ -111,15 +110,16 @@ func setUpPaths() Paths { // TODO this is hard-coded...
 
 // Validates input arguments to rebuild main program.
 func validateArgs(ops string, arch string, version string) error {
-	archRegex := regexp.MustCompile(`(amd64|386|arm5|arm6|arm64|arm7)$`)
-	versionRegex := regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
+	var validArchs = []string{"amd64", "386", "arm5", "arm6", "arm64", "arm7"}
+	versionRegex := regexp.MustCompile(`^(\d+\.\d+\.\d+)$`)
 
 	if ops != "linux" {
 		return fmt.Errorf("<os> limited to `linux` at the moment")
 	}
-	if !archRegex.MatchString(arch) {
+	if !common.Contains(validArchs, arch) {
 		return fmt.Errorf("<arch> must be a valid linux target architecture (amd64|386|arm5|arm6|arm64|arm7)")
 	}
+
 	if !versionRegex.MatchString(version) {
 		return fmt.Errorf("<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4")
 	}
@@ -129,13 +129,19 @@ func validateArgs(ops string, arch string, version string) error {
 
 // Returns ArifactSpec.
 func getArtifactSpec(ops string, arch string, version string, paths Paths) (afs ArtifactSpec, err error) {
-	common.RunCommand(paths.Scripts.Clone, paths.Directories.Temp)
-	common.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, version) // TODO what if unstable,
-	commit, err := common.GetCommit(paths.Directories.Geth)
-
+	_, err = common.RunCommand(paths.Scripts.Clone, paths.Directories.Temp)
 	if err != nil {
-		return afs, fmt.Errorf("no commit found for version `%s` in directory `%s`", version, paths.Directories.Geth)
+		return afs, err
 	}
+	_, err = common.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, version) // TODO what if unstable,
+	if err != nil {
+		return afs, err
+	}
+	commit, err := common.GetCommit(paths.Directories.Geth)
+	if err != nil {
+		return afs, err
+	}
+
 	afs = ArtifactSpec{
 		Version:     version,
 		Os:          ops,
@@ -182,20 +188,20 @@ func getBuildCommand(ops string, arch string, travisFile string) (string, error)
 	return string(match), nil
 }
 
+// Returns the Go compiler version form `major.minor.patch` as specified by geth checksumFile.
 func getGoVersion(checksumFile string) (string, error) {
 	fileContent, err := os.ReadFile(checksumFile)
 	if err != nil {
 		return "", fmt.Errorf("error reading file %s: %v", checksumFile, err)
 	}
 
-	lineRegex := regexp.MustCompile(`#\s+version:golang\s+(\d+\.\d+\.\d+)`)
-	versionLine := lineRegex.Find(fileContent)
+	checksumVersionRegex := regexp.MustCompile(`#\s+version:golang\s+(\d+\.\d+\.\d+)`)
+	versionRegex := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
+	versionLine := checksumVersionRegex.Find(fileContent)
 
 	if versionLine == nil {
 		return "", fmt.Errorf("no go version found in file `%s`", checksumFile)
 	}
-
-	versionRegex := regexp.MustCompile(`\d+\.\d+\.\d+`)
 	version := versionRegex.Find(versionLine)
 
 	if version == nil {
@@ -265,7 +271,7 @@ func getElfTarget(ops string, arch string) (elfTarget string, err error) {
 		case "arm64":
 			elfTarget = "elf64-littleaarch64"
 		case "arm5", "arm6", "arm7":
-			elfTarget = "elf32-littlearm"
+			elfTarget = "elf32-littlearm" // TODO wrong target.
 		default:
 			err = fmt.Errorf("no elf version found for linux arch `%s`", arch)
 		}
@@ -290,14 +296,13 @@ func getUbuntuPackages(ops string, arch string) (packages []string, err error) {
 		case "arm7":
 			packages = append(packages, "libc6-dev-armhf-cross")
 		default:
-			err = fmt.Errorf("no packages found for linux arch `%s`", arch)
+			return nil, fmt.Errorf("no packages found for linux arch `%s`", arch)
 		}
 	default:
-		err = fmt.Errorf("no packages found for os `%s`", ops)
+		return nil, fmt.Errorf("no packages found for os `%s`", ops)
 	}
 	return
 }
-
 
 func getUbuntuSpec(afs ArtifactSpec) (ub UbuntuSpec, err error) {
 	elfTarget, err := getElfTarget(afs.Os, afs.Arch)
@@ -317,7 +322,6 @@ func getUbuntuSpec(afs ArtifactSpec) (ub UbuntuSpec, err error) {
 	}
 	return ub, nil
 }
-
 
 func createDockerTag(gethVersion string, ops string, arch string) string {
 	now := time.Now()
@@ -344,7 +348,7 @@ func (bi *BuildInput) ToMap() map[string]string {
 }
 
 // Starts a docker build for dockerfile at `dockerPath` with given `buildArgs`.
-func runDockerBuild(buildArgs map[string]string, dockerTag string, dockerDir string) {
+func runDockerBuild(buildArgs map[string]string, dockerTag string, dockerDir string) error {
 	// set docker build args
 	cmdArgs := []string{"build", "-t", dockerTag, "--progress=plain"} // TODO test tty
 	for key, value := range buildArgs {
@@ -352,5 +356,9 @@ func runDockerBuild(buildArgs map[string]string, dockerTag string, dockerDir str
 	}
 	cmdArgs = append(cmdArgs, dockerDir)
 	// run docker build
-	common.RunCommand("docker", cmdArgs...)
+	_, err := common.RunCommand("docker", cmdArgs...)
+	if err != nil {
+		return err
+	}
+	return nil
 }

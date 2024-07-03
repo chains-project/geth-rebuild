@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 )
 
 // Runs command and exits if encountering error.
-func RunCommand(cmd string, args ...string) (out string) {
+func RunCommand(cmd string, args ...string) (out string, err error) {
 	exeCmd := exec.Command(cmd, args...)
 
 	var outBuffer bytes.Buffer
@@ -22,10 +21,12 @@ func RunCommand(cmd string, args ...string) (out string) {
 	exeCmd.Stderr = multiWriter
 
 	fmt.Println("[CMD]	", printArgs(exeCmd.Args))
+
 	if err := exeCmd.Run(); err != nil {
-		log.Fatal(err)
+		return "", fmt.Errorf("command failed: %s\nerror: %w", printArgs(exeCmd.Args), err)
 	}
-	return outBuffer.String()
+
+	return outBuffer.String(), nil
 }
 
 // Geth function copying.
@@ -61,9 +62,12 @@ func GetBaseDir(basePath string) (string, error) {
 
 // Returns commit hash at latest commit in dir.
 func GetCommit(dir string) (string, error) {
-	gitDir := fmt.Sprintf("--git-dir=%s/.git", dir)
-	workTree := fmt.Sprintf("--work-tree=%s", dir)
-	var commit string = RunCommand("git", gitDir, workTree, "log", "-1", "--format=%H")
+	dirFlag := fmt.Sprintf("--git-dir=%s/.git", dir)
+	treeFlag := fmt.Sprintf("--work-tree=%s", dir)
+	commit, err := RunCommand("git", dirFlag, treeFlag, "log", "-1", "--format=%H")
+	if err != nil {
+		return "", err
+	}
 	if commit == "" {
 		return "", fmt.Errorf("no commit found in dir %s", dir)
 	}
@@ -89,4 +93,14 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 		}
 	}
 	return nil
+}
+
+// Contains for string slices
+func Contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }
