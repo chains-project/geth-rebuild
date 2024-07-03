@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-var commonPackages = []string{"git", "ca-certificates", "wget"}
-
 // Runs command and exits if encountering error.
 func RunCommand(cmd string, args ...string) (out string) {
 	exeCmd := exec.Command(cmd, args...)
@@ -59,4 +57,36 @@ func GetBaseDir(basePath string) (string, error) {
 		}
 	}
 	return dir, nil
+}
+
+// Returns commit hash at latest commit in dir.
+func GetCommit(dir string) (string, error) {
+	gitDir := fmt.Sprintf("--git-dir=%s/.git", dir)
+	workTree := fmt.Sprintf("--work-tree=%s", dir)
+	var commit string = RunCommand("git", gitDir, workTree, "log", "-1", "--format=%H")
+	if commit == "" {
+		return "", fmt.Errorf("no commit found in dir %s", dir)
+	}
+	commit = strings.ReplaceAll(commit, "\n", "")
+	return commit, nil
+}
+
+/* // Runs command chmod `permission` script for each script in `scripts`. Exits if error occurs.
+func ChangePermissions(scripts []string, permission string) {
+	for _, script := range scripts {
+		//util.RunCommand("cat", script)
+		RunCommand("chmod", permission, script)
+		fmt.Printf("\nPermissions changed (%s) for file %s", permission, script)
+	}
+}
+*/
+// Utility function to change permissions of scripts
+func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
+	for _, script := range scripts {
+		err := os.Chmod(script, mode)
+		if err != nil {
+			return fmt.Errorf("error changing permissions for %s: %v", script, err)
+		}
+	}
+	return nil
 }
