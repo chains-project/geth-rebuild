@@ -84,7 +84,7 @@ func getElfTarget(ops string, arch string) (elfTarget string, err error) {
 		case "arm64":
 			elfTarget = "elf64-littleaarch64"
 		case "arm5", "arm6", "arm7":
-			elfTarget = "elf32-littlearm" // TODO fix wrong target.
+			elfTarget = "elf32-little"
 		default:
 			err = fmt.Errorf("no elf version found for linux arch `%s`", arch)
 		}
