@@ -1,0 +1,24 @@
+# This file contains sha256 checksums of optional build dependencies.
+
+# version:spec-tests 2.1.0
+# https://github.com/ethereum/execution-spec-tests/releases
+# https://github.com/ethereum/execution-spec-tests/releases/download/v2.1.0/
+ca89c76851b0900bfcc3cbb9a26cbece1f3d7c64a3bed38723e914713290df6c  fixtures_develop.tar.gz
+
+# version 
+# https://go.dev/dl/
+fed720678e728a7ca30ba8d1ded1caafe27d16028fab0232b8ba8e22008fb784  go1.22.4.src.tar.gz
+
+
+# version:golangci 1.59.0
+# https://github.com/golangci/golangci-lint/releases/
+# https://github.com/golangci/golangci-lint/releases/download/v1.59.0/
+418acf7e255ddc0783e97129c9b03d9311b77826a5311d425a01c708a86417e7  golangci-lint-1.59.0-darwin-amd64.tar.gz
+
+# version:ppa-builder-1 1.19.6
+# https://go.dev/dl/
+d7f0013f82e6d7f862cc6cb5c8cdb48eef5f2e239b35baa97e2f1a7466043767  go1.19.6.src.tar.gz
+
+# version:ppa-builder-2 1.21.9
+# https://go.dev/dl/
+58f0c5ced45a0012bce2ff7a9df03e128abcc8818ebabe5027bb92bafe20e421  go1.21.9.src.tar.gz
