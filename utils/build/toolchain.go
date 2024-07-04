@@ -99,20 +99,22 @@ func getGoVersion(checksumFile string) (string, error) {
 		return "", fmt.Errorf("error reading file %s: %v", checksumFile, err)
 	}
 
-	checksumVersionRegex := regexp.MustCompile(`#\s+version:golang\s+(\d+\.\d+\.\d+)`)
-	versionRegex := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
-	versionLine := checksumVersionRegex.Find(fileContent)
+	reTar := regexp.MustCompile(`go(\d+.\d+.(\d+)?).src.tar.gz`)
+	goTar := reTar.Find(fileContent)
 
-	if versionLine == nil {
+	if goTar == nil {
 		return "", fmt.Errorf("no go version found in file `%s`", checksumFile)
 	}
-	version := versionRegex.Find(versionLine)
 
-	if version == nil {
-		return "", fmt.Errorf("no go version found in file `%s` for line %s", checksumFile, versionLine)
+	reVersion := regexp.MustCompile(`(\d+.\d+.(\d+)?)`)
+	goVersion := reVersion.Find(goTar)
+
+	if goVersion == nil {
+
+		return "", fmt.Errorf("no go version derivable form line %s in file `%s`", goTar, checksumFile)
 	}
 
-	return string(version), nil
+	return string(goVersion), nil
 }
 
 // Returns compiler for osArch as described by compilers map. Returns error if not found.
