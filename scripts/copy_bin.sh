@@ -14,17 +14,16 @@ mkdir -p "$OUTPUT_DIR"
 
 # run container in detached mode
 echo "Running container $DOCKER_TAG in detached mode."
-CONTAINER_ID=$(docker run -d "$DOCKER_TAG" /bin/sh) # cannot use --rm here: loses cid
+CONTAINER_ID=$(docker run -d "$DOCKER_TAG" /bin/sh) ||  { echo "failed to start container tagged $DOCKER_TAG"; exit 1; }
 
 # copy binaries and stop container
 echo "Copying binaries..."
-docker cp -q "$CONTAINER_ID":/bin/geth-reference "$OUTPUT_DIR"
-docker cp -q "$CONTAINER_ID":/bin/geth-reproduce "$OUTPUT_DIR"
-docker stop "$CONTAINER_ID"
+docker cp -q "$CONTAINER_ID":/bin/geth-reference "$OUTPUT_DIR"  || { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
+docker cp -q "$CONTAINER_ID":/bin/geth-reproduce "$OUTPUT_DIR" ||   { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
+echo "Stopping container $CONTAINER_ID"
+docker stop "$CONTAINER_ID" || { echo "error: container id not found"; exit 1; }
 
-
-echo "Stopped container $CONTAINER_ID"
 echo "You can run it again with docker run $CONTAINER_ID /bin/sh"
-echo "Remove the conotainer with docker rm $CONTAINER_ID"
+echo "Remove the container with docker rm $CONTAINER_ID"
 echo ""
 echo "Binaries copied to $OUTPUT_DIR"
