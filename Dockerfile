@@ -29,6 +29,8 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 ENV GOARM=$ARM_V
+ENV CGO_ENABLED=1
+
 # Fetch reference binary and strip symbols + build ids
 ENV BIN_DIR="geth-${OS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
