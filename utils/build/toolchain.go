@@ -10,10 +10,11 @@ import (
 )
 
 type ToolchainSpec struct {
-	GoVersion string
-	CC        string
-	BuildCmd  string
-	CVersion  string // TODO retrieve (from binary)
+	GoVersion  string
+	CC         string
+	BuildCmd   string
+	ArmVersion string
+	CVersion   string // TODO retrieve (from binary) (script inside docker?)
 }
 
 // Returns build configurations for osArch retrieved from build config file (travis.yml).
@@ -33,10 +34,16 @@ func NewToolchainSpec(afs ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, er
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
 
+	env, err := getArmVersion(afs.Os, afs.Arch)
+	if err != nil {
+		return tc, fmt.Errorf("failed to get GOARM: %w", err)
+	}
+
 	tc = ToolchainSpec{
-		GoVersion: goVersion,
-		CC:        cc,
-		BuildCmd:  cmd,
+		GoVersion:  goVersion,
+		CC:         cc,
+		BuildCmd:   cmd,
+		ArmVersion: env,
 	}
 	return tc, nil
 }
@@ -46,7 +53,8 @@ func (t ToolchainSpec) ToMap() map[string]string {
 		"GO_VERSION": t.GoVersion,
 		"C_COMPILER": t.CC,
 		"BUILD_CMD":  t.BuildCmd,
-		//"CVersion":   t.CVersion, // TODO
+		"ARM_V":      t.ArmVersion,
+		//"CVersion":   t.CVersion,
 	}
 }
 
@@ -56,6 +64,24 @@ func (t ToolchainSpec) PrintSpec() string {
 }
 
 // --- helpers ---
+
+func getArmVersion(ops string, arch string) (string, error) {
+	switch ops {
+	case "linux":
+		switch arch {
+		case "amd64", "386", "arm64":
+			return "", nil
+		case "arm5", "arm6", "arm7":
+			v := strings.Split(arch, "arm")[1]
+			return strings.TrimSpace(v), nil
+		default:
+			return "", fmt.Errorf("no GOARM command found for linux arch `%s`", arch)
+		}
+	default:
+		return "", fmt.Errorf("no GOARM command found for os `%s`", ops)
+	}
+
+}
 
 // Retrieves build commands for os arch in given travis build file (travis.yml). Returns error if not found.
 func getBuildCommand(ops string, arch string, travisFile string) (string, error) {
@@ -69,7 +95,10 @@ func getBuildCommand(ops string, arch string, travisFile string) (string, error)
 		case "386", "arm64":
 			pattern = fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(arch))
 		case "arm5", "arm6", "arm7":
-			v := strings.Split(arch, "arm")[1]
+			v, err := getArmVersion(ops, arch)
+			if err != nil {
+				return "", err
+			}
 			pattern = fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(fmt.Sprintf("GOARM=%s", v)))
 		default:
 			return "", fmt.Errorf("no build command found for linux arch `%s`", arch)
@@ -84,12 +113,19 @@ func getBuildCommand(ops string, arch string, travisFile string) (string, error)
 	}
 
 	re := regexp.MustCompile(pattern)
-	match := re.Find(fileContent)
-	if match == nil {
+	line := re.Find(fileContent)
+	if line == nil {
 		return "", fmt.Errorf("no build command found for architecture `%s` in file `%s`", arch, travisFile)
 	}
 
-	return string(match), nil
+	reArm := regexp.MustCompile(`go run\s+(.*)`)
+	cmd := reArm.Find(line)
+
+	if cmd == nil {
+		return "", fmt.Errorf("no build command found for architecture `%s` from line %s`", arch, line)
+	}
+
+	return string(cmd), nil
 }
 
 // Returns the Go compiler version form `major.minor.patch` as specified by geth checksumFile.
@@ -107,14 +143,14 @@ func getGoVersion(checksumFile string) (string, error) {
 	}
 
 	reVersion := regexp.MustCompile(`(\d+.\d+.(\d+)?)`)
-	goVersion := reVersion.Find(goTar)
+	match := reVersion.Find(goTar)
 
-	if goVersion == nil {
+	if match == nil {
 
 		return "", fmt.Errorf("no go version derivable form line %s in file `%s`", goTar, checksumFile)
 	}
 
-	return string(goVersion), nil
+	return string(match), nil
 }
 
 // Returns compiler for osArch as described by compilers map. Returns error if not found.

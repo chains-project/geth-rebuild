@@ -10,6 +10,7 @@ ARG ARCH=""
 ARG GETH_COMMIT=""
 ARG SHORT_COMMIT=""
 ARG BUILD_CMD=""
+ARG ARM_V=""
 ARG C_COMPILER=""
 ARG PACKAGES=""
 ARG ELF_TARGET="elf64-x86-64"
@@ -27,7 +28,7 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && \
     tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
-
+ENV GOARM=$ARM_V
 # Fetch reference binary and strip symbols + build ids
 ENV BIN_DIR="geth-${OS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
@@ -43,9 +44,9 @@ RUN wget ${REF_URL} && \
 # TODO decide if should clone again
 COPY ./tmp/go-ethereum /go-ethereum 
 
-RUN echo ${BUILD_CMD}
+RUN echo $GOARM
 RUN cd go-ethereum && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
-    CGO_ENABLED=1 ${BUILD_CMD} ./cmd/geth
+    ${BUILD_CMD} ./cmd/geth
 
 RUN mv go-ethereum/build/bin/geth /bin/geth-reproduce && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id /bin/geth-reproduce
