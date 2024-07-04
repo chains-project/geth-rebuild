@@ -6,13 +6,13 @@ Reproduce and verify source-to-binary semantics of a geth Linux binary.
 
 ## Build from source
 
-`go build ./cmd/rebuild -o ./bin/rebuild`
+`go build . -o ./bin/rebuild`
 
 ## Usage
 
 `cd ./bin`
 
-`./rebuild <os-arch> <version>`
+`./rebuild <os> <arch> <version>`
 
 For example, `./rebuild linux-amd64 1.14.3`
 
@@ -21,7 +21,7 @@ For example, `./rebuild linux-amd64 1.14.3`
 
 When reproducing an artifact, cases of non-determinism need to be controlled.
 
-In `./reports` four cases found for geth are shown:
+In `.non-determinism/reports` four cases found for geth are shown:
 
 - **buildid**: embedding of unreproducible build ids
 - **date**: conditional embedding of release date
@@ -31,28 +31,6 @@ In `./reports` four cases found for geth are shown:
 > [!TIP]
 > Reproduce these cases using `TODO PATH <case> <docker tag>`
 > E.g. `TODO path my-path-tag`
-
-
-## Build Inputs
-
-When reproducing a geth binary, we need the correct **source code** and **build configurations** to reproduce the binary.
-
-Given a certain...
-
-- `GETH_VERSION`: E.g. 1.14.0 or 1.14.1-unstable
-- `TARGET_ARCH`: target architecture, e.g. linux amd64
-- `GETH_PKG`: relevant package (`geth` vs `geth-alltools`)
-
-We need to fetch the following information:
-
-- `GETH_COMMIT`: geth commit given version
-  - **How:** `go version -m geth`
-- `GO_VERSION`: Go compiler version
-  - **How:** `go version -m geth`
-- `BUILD_FLAGS`: additional go flags needed for build
-  - **How:** get from travis.yml
-- GCC version
-  - **How:** `readelf -p .comment geth`
 
 
 ## Limitations
