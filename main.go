@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// ubuntu specification
-	ub, err := build.NewUbuntuSpec(afs)
+	ub, err := build.NewUbuntuSpec(afs, paths)
 	if err != nil {
 		log.Fatal(err)
 	}

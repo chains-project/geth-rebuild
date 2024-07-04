@@ -2,7 +2,11 @@ package build
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
+
+	"github.com/chains-project/geth-rebuild/utils"
 )
 
 type UbuntuSpec struct {
@@ -11,7 +15,7 @@ type UbuntuSpec struct {
 	Packages  []string
 }
 
-func NewUbuntuSpec(afs ArtifactSpec) (ub UbuntuSpec, err error) {
+func NewUbuntuSpec(afs ArtifactSpec, paths utils.Paths) (ub UbuntuSpec, err error) {
 	elfTarget, err := getElfTarget(afs.Os, afs.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
@@ -22,8 +26,13 @@ func NewUbuntuSpec(afs ArtifactSpec) (ub UbuntuSpec, err error) {
 		return ub, fmt.Errorf("failed to get Ubuntu packages: %w", err)
 	}
 
+	dist, err := getUbuntuDist(paths.Files.Travis)
+	if err != nil {
+		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
+	}
+
 	ub = UbuntuSpec{
-		Dist:      "focal", //TODO: get dist from Travis file
+		Dist:      dist,
 		ElfTarget: elfTarget,
 		Packages:  packages,
 	}
@@ -45,7 +54,23 @@ func (u UbuntuSpec) PrintSpec() string {
 
 // -- helpers ---
 
+// Retrieves Ubuntu distribution as defined in `travisFile` (dist : dddd)
+func getUbuntuDist(travisFile string) (dist string, err error) {
+	fileContent, err := os.ReadFile(travisFile)
+	if err != nil {
+		return "", fmt.Errorf("error reading file %s: %v", travisFile, err)
+	}
 
+	reDistDef := regexp.MustCompile(`dist:\s*([a-z]+)`)
+	distLine := reDistDef.Find(fileContent)
+
+	if distLine == nil {
+		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisFile)
+	}
+	dist = strings.Split(string(distLine), ": ")[1]
+	return dist, nil
+
+}
 
 // Returns ELF input target for os and arch. Used e.g. for binutils `strip` command.
 func getElfTarget(ops string, arch string) (elfTarget string, err error) {
