@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // Runs command with print and returns any outputs and errors
@@ -95,12 +94,4 @@ func Contains(slice []string, item string) bool {
 		}
 	}
 	return false
-}
-
-// Returns a tag to identify a Docker image build
-func CreateRebuildTag(version string, ops string, arch string) string {
-	now := time.Now()
-	timestamp := now.Format("2006-01-02-15:04")
-	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, ops, arch, timestamp)
-	return tag
 }

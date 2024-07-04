@@ -61,7 +61,7 @@ func main() {
 		Artifact:  afs,
 		Toolchain: tc,
 		Ubuntu:    ub,
-		DockerTag: utils.CreateRebuildTag(afs.Version, afs.Os, afs.Arch),
+		DockerTag: build.CreateDockerTag(afs.Version, afs.Os, afs.Arch),
 	}
 
 	_, err = utils.RunCommand(paths.Scripts.StartDocker)

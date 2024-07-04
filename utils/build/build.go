@@ -2,6 +2,7 @@ package build
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/chains-project/geth-rebuild/utils"
 )
@@ -47,7 +48,7 @@ func (bi BuildInput) printArgs(args ...map[string]string) string {
 // Starts a reproduing docker build for dockerfile at `dockerDir` using configured build argument in `bi`
 func RunDockerBuild(bi BuildInput, dockerDir string) error {
 	// set docker build args
-	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"} // TODO test tty
+	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
 	args := bi.getBuildArgs()
 	bi.printArgs(args)
@@ -62,4 +63,12 @@ func RunDockerBuild(bi BuildInput, dockerDir string) error {
 		return err
 	}
 	return nil
+}
+
+// Returns a tag to identify a Docker image build
+func CreateDockerTag(version string, ops string, arch string) string {
+	now := time.Now()
+	timestamp := now.Format("2006-01-02-15:04")
+	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, ops, arch, timestamp)
+	return tag
 }
