@@ -1,4 +1,4 @@
-package specs
+package build
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func (u UbuntuSpec) ToMap() map[string]string {
 	return map[string]string{
 		"UBUNTU_DIST": u.Dist,
 		"ELF_TARGET":  u.ElfTarget,
-		"PACKAGES":    strings.Join(u.Packages, ", "),
+		"PACKAGES":    strings.Join(u.Packages, " "),
 	}
 }
 
@@ -43,8 +43,9 @@ func (u UbuntuSpec) PrintSpec() string {
 		u.Dist, u.ElfTarget, u.Packages)
 }
 
-
 // -- helpers ---
+
+
 
 // Returns ELF input target for os and arch. Used e.g. for binutils `strip` command.
 func getElfTarget(ops string, arch string) (elfTarget string, err error) {
@@ -58,7 +59,7 @@ func getElfTarget(ops string, arch string) (elfTarget string, err error) {
 		case "arm64":
 			elfTarget = "elf64-littleaarch64"
 		case "arm5", "arm6", "arm7":
-			elfTarget = "elf32-littlearm" // TODO wrong target.
+			elfTarget = "elf32-littlearm" // TODO fix wrong target.
 		default:
 			err = fmt.Errorf("no elf version found for linux arch `%s`", arch)
 		}

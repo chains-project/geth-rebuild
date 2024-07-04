@@ -1,4 +1,4 @@
-package specs
+package build
 
 import (
 	"fmt"

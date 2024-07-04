@@ -1,4 +1,4 @@
-package specs
+package build
 
 import (
 	"path/filepath"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetBuildCommand(t *testing.T) {
-	travisFile := filepath.Join("testdata", "travis.yml")
+	travisFile := filepath.Join("testdata", ".travis.yml")
 
 	tests := []struct {
 		ops       string
