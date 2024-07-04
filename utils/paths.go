@@ -37,29 +37,29 @@ type Scripts struct {
 
 // Sets project paths.
 func SetUpPaths() Paths {
-	baseDir, err := GetBaseDir("geth-rebuild")
+	rootDir, err := GetRootDir("geth-rebuild")
 	if err != nil {
 		log.Fatal(err)
 	}
 	paths := Paths{
 		Directories: Directories{
-			Root:    baseDir,
-			Temp:    filepath.Join(baseDir, "tmp"),
-			Geth:    filepath.Join(baseDir, "tmp", "go-ethereum"),
-			Scripts: filepath.Join(baseDir, "scripts"),
-			Bin:     filepath.Join(baseDir, "bin"),
+			Root:    rootDir,
+			Temp:    filepath.Join(rootDir, "tmp"),
+			Geth:    filepath.Join(rootDir, "tmp", "go-ethereum"),
+			Scripts: filepath.Join(rootDir, "scripts"),
+			Bin:     filepath.Join(rootDir, "bin"),
 		},
 		Files: Files{
-			Travis:    filepath.Join(baseDir, "tmp", "go-ethereum", ".travis.yml"),
-			Docker:    filepath.Join(baseDir, "Dockerfile"),
-			Checksums: filepath.Join(baseDir, "tmp", "go-ethereum", "build", "checksums.txt"),
+			Travis:    filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
+			Docker:    filepath.Join(rootDir, "Dockerfile"),
+			Checksums: filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
 		},
 		Scripts: Scripts{
-			Clone:           filepath.Join(baseDir, "scripts", "clone.sh"),
-			Checkout:        filepath.Join(baseDir, "scripts", "checkout.sh"),
-			StartDocker:     filepath.Join(baseDir, "scripts", "start_docker.sh"),
-			CopyBinaries:    filepath.Join(baseDir, "scripts", "copy_bin.sh"),
-			CompareBinaries: filepath.Join(baseDir, "scripts", "compare_bin.sh"),
+			Clone:           filepath.Join(rootDir, "scripts", "clone.sh"),
+			Checkout:        filepath.Join(rootDir, "scripts", "checkout.sh"),
+			StartDocker:     filepath.Join(rootDir, "scripts", "start_docker.sh"),
+			CopyBinaries:    filepath.Join(rootDir, "scripts", "copy_bin.sh"),
+			CompareBinaries: filepath.Join(rootDir, "scripts", "compare_bin.sh"),
 		},
 	}
 	return paths

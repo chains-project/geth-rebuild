@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
-// Runs command and exits if encountering error.
+// Runs command with print and returns any outputs and errors
 func RunCommand(cmd string, args ...string) (out string, err error) {
 	exeCmd := exec.Command(cmd, args...)
 
@@ -29,7 +30,7 @@ func RunCommand(cmd string, args ...string) (out string, err error) {
 	return outBuffer.String(), nil
 }
 
-// Geth function copying.
+// Pretty print args. A little copying from geth.
 func printArgs(args []string) string {
 	var s strings.Builder
 	for i, arg := range args {
@@ -44,23 +45,23 @@ func printArgs(args []string) string {
 	return s.String()
 }
 
-// Returns root path for basePath. E.g. Users/xxxx/geth-rebuild
-func GetBaseDir(basePath string) (string, error) {
+// Returns root path for `base`
+func GetRootDir(base string) (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 	dir := wd
-	for !strings.HasSuffix(dir, basePath) {
+	for !strings.HasSuffix(dir, base) {
 		dir = filepath.Dir(dir)
 		if dir == "/" {
-			return "", fmt.Errorf("error. cannot find root %s in '%s'", basePath, wd)
+			return "", fmt.Errorf("error. cannot find root %s in '%s'", base, wd)
 		}
 	}
 	return dir, nil
 }
 
-// Returns commit hash at latest commit in dir.
+// Returns commit hash at latest commit in `dir`
 func GetGitCommit(dir string) (string, error) {
 	dirFlag := fmt.Sprintf("--git-dir=%s/.git", dir)
 	treeFlag := fmt.Sprintf("--work-tree=%s", dir)
@@ -75,16 +76,7 @@ func GetGitCommit(dir string) (string, error) {
 	return commit, nil
 }
 
-/* // Runs command chmod `permission` script for each script in `scripts`. Exits if error occurs.
-func ChangePermissions(scripts []string, permission string) {
-	for _, script := range scripts {
-		//util.RunCommand("cat", script)
-		RunCommand("chmod", permission, script)
-		fmt.Printf("\nPermissions changed (%s) for file %s", permission, script)
-	}
-}
-*/
-// Utility function to change permissions of scripts
+// Changes permissions of scripts to `mode`
 func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	for _, script := range scripts {
 		err := os.Chmod(script, mode)
@@ -95,7 +87,7 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-// Contains for string slices
+// Contains for a string slice
 func Contains(slice []string, item string) bool {
 	for _, v := range slice {
 		if v == item {
@@ -103,4 +95,12 @@ func Contains(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// Returns a tag to identify a Docker image build
+func CreateRebuildTag(version string, ops string, arch string) string {
+	now := time.Now()
+	timestamp := now.Format("2006-01-02-15:04")
+	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, ops, arch, timestamp)
+	return tag
 }

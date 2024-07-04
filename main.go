@@ -1,30 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
+	"path/filepath"
 
 	"github.com/chains-project/geth-rebuild/utils"
-	"github.com/chains-project/geth-rebuild/utils/specs"
+	"github.com/chains-project/geth-rebuild/utils/build"
 )
-
-type Spec interface {
-	ToMap() map[string]string
-	PrintSpec() string
-}
-
-// build inputs structs
-type BuildInput struct {
-	Toolchain specs.ToolchainSpec
-	Artifact  specs.ArtifactSpec
-	Ubuntu    specs.UbuntuSpec
-	DockerTag string
-}
 
 var paths utils.Paths = utils.SetUpPaths()
 
 func init() {
+	// set up scripts
 	scripts := []string{
 		paths.Scripts.Clone,
 		paths.Scripts.Checkout,
@@ -39,40 +26,42 @@ func init() {
 }
 
 func main() {
-	if len(os.Args) != 4 {
-		fmt.Println("Usage: <os> <arch> <geth version>")
-		fmt.Println("Example: linux amd64 1.14.3")
-		os.Exit(1)
-	}
-	ops := os.Args[1]
-	arch := os.Args[2]
-	version := os.Args[3]
+	ops, arch, version, gethDir, unstableHash := utils.ParseFlags()
+
 	err := utils.ValidateArgs(ops, arch, version)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	afs, err := specs.NewArtifactSpec(ops, arch, version, paths)
+	var noClone bool // TODO ugly code
+	if gethDir != "" {
+		paths.Directories.Geth = gethDir
+		noClone = true
+	}
+
+	// artifact specification
+	afs, err := build.NewArtifactSpec(ops, arch, version, unstableHash, noClone, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// toolchain info
-	tc, err := specs.NewToolchainSpec(afs, paths)
+	// toolchain specification
+	tc, err := build.NewToolchainSpec(afs, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ub, err := specs.NewUbuntuSpec(afs)
+	// ubuntu specification
+	ub, err := build.NewUbuntuSpec(afs)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	buildInput := BuildInput{
+	bi := build.BuildInput{
 		Artifact:  afs,
 		Toolchain: tc,
 		Ubuntu:    ub,
-		DockerTag: utils.CreateDockerTag(afs.Version, afs.Os, afs.Arch),
+		DockerTag: utils.CreateRebuildTag(afs.Version, afs.Os, afs.Arch),
 	}
 
 	_, err = utils.RunCommand(paths.Scripts.StartDocker)
@@ -80,10 +69,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(buildInput)
-
-	//biMap := buildInput.ToMap() // TODO
-	//runDockerBuild(biMap, dockerSpec.BuildTag, paths.Directories.Root)
-	//utils.RunCommand(copyBinaries, dockerTag, paths.BinDir) // TODO copy into specific dir
-	//utils.RunCommand(compareBinaries, paths.BinDir)
+	build.RunDockerBuild(bi, paths.Directories.Root)
+	utils.RunCommand(paths.Scripts.CopyBinaries, bi.DockerTag, paths.Directories.Bin)
+	// TODO organise into functions. Alternatively: put scripts into docker.
+	binRef := filepath.Join(paths.Directories.Bin, "geth-reference")
+	binRep := filepath.Join(paths.Directories.Bin, "geth-reproduce")
+	utils.RunCommand(paths.Scripts.CompareBinaries, binRef, binRep)
 }

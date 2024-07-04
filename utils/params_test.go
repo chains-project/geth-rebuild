@@ -16,10 +16,13 @@ func TestValidateArgs(t *testing.T) {
 		{"linux", "386", "0.1.0", false, ""},
 		{"linux", "arm5", "1.14.3.d", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
 		{"windows", "amd64", "1.14.4", true, "<os> limited to `linux` at the moment"},
-		{"linux", "arm666", "1.14.4", true, "<arch> must be a valid linux target architecture (amd64|386|arm5|arm6|arm64|arm7)"},
+		{"linux", "arm42", "1.14.4", true, "<arch> must be a valid linux target architecture (amd64|386|arm5|arm6|arm64|arm7)"},
 		{"linux", "amd64", "1.1.", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
 		{"linux", "amd64", "1..2", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
 		{"linux", "amd64", ".1.2.2", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
+		{"linux", "amd64", "a.2.2", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
+		{"linux", "amd64", "14", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
+		{"linux", "amd64", "14.1", true, "<geth version> must be in format 'major.minor.patch'\nExample: 1.14.4"},
 	}
 
 	for _, tt := range tests {
@@ -33,3 +36,6 @@ func TestValidateArgs(t *testing.T) {
 		}
 	}
 }
+
+
+// TODO test flags
