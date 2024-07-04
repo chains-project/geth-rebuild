@@ -3,7 +3,8 @@ package build
 import (
 	"fmt"
 
-	"github.com/chains-project/geth-rebuild/utils"
+	utils "github.com/chains-project/geth-rebuild/internal/utils"
+	
 )
 
 // specifies information about reproduing artifact
@@ -36,12 +37,12 @@ func checkoutGeth(script string, gethDir string, versionOrCommit string) error {
 func NewArtifactSpec(ops string, arch string, version string, unstableCommit string, noClone bool, paths utils.Paths) (afs ArtifactSpec, err error) {
 	var commit string
 
-	if !noClone {
-		err := cloneGethRepo(paths.Scripts.Clone, paths.Directories.Temp)
-		if err != nil {
-			return afs, err
-		}
-	}
+	// if !noClone {
+	// 	err := cloneGethRepo(paths.Scripts.Clone, paths.Directories.Temp)
+	// 	if err != nil {
+	// 		return afs, err
+	// 	}
+	// }
 
 	if unstableCommit != "" {
 		commit = unstableCommit

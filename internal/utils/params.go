@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-// TODO params struct?
+// TODO params
 
 var (
 	// Optional flags

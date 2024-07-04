@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chains-project/geth-rebuild/utils"
+	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 type BuildInput struct {

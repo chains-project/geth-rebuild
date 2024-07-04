@@ -4,8 +4,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/chains-project/geth-rebuild/utils"
-	"github.com/chains-project/geth-rebuild/utils/build"
+	"github.com/chains-project/geth-rebuild/internal/build"
+	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 var paths utils.Paths = utils.SetUpPaths()
