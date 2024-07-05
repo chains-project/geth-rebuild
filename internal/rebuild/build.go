@@ -9,7 +9,7 @@ import (
 
 type Spec interface {
 	ToMap() map[string]string
-	PrintSpec() string
+	String() string
 }
 
 type BuildInput struct {
@@ -35,13 +35,13 @@ func (bi BuildInput) getBuildArgs() map[string]string {
 	return buildArgs
 }
 
-func (bi BuildInput) PrintArgs() {
+func (bi BuildInput) String() string {
 	args := bi.getBuildArgs()
 	var str string = "\n[BUILD ARGUMENTS]\n\n"
 	for key, value := range args {
 		str += fmt.Sprintf("%s=%s\n", key, value)
 	}
-	fmt.Println(str)
+	return str
 }
 
 // Starts a reproducing docker build for dockerfile at `dockerDir` using configured build arguments in `bi`

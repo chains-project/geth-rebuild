@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
-	"github.com/chains-project/geth-rebuild/internal/build"
+	"github.com/chains-project/geth-rebuild/internal/rebuild"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -40,36 +41,38 @@ func main() {
 	}
 
 	// artifact specification
-	afs, err := build.NewArtifactSpec(ops, arch, version, unstableHash, noClone, paths)
+	afs, err := rebuild.NewArtifactSpec(ops, arch, version, unstableHash, noClone, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// toolchain specification
-	tc, err := build.NewToolchainSpec(afs, paths)
+	tc, err := rebuild.NewToolchainSpec(afs, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// ubuntu specification
-	ub, err := build.NewUbuntuSpec(afs, paths)
+	ub, err := rebuild.NewDockerSpec(afs, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	bi := build.BuildInput{
+	bi := rebuild.BuildInput{
 		Artifact:  afs,
 		Toolchain: tc,
 		Ubuntu:    ub,
-		DockerTag: build.CreateDockerTag(afs.Version, afs.Os, afs.Arch),
+		DockerTag: rebuild.CreateDockerTag(afs.Version, afs.Os, afs.Arch),
 	}
+
+	fmt.Println(bi)
 
 	_, err = utils.RunCommand(paths.Scripts.StartDocker)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	build.RunDockerBuild(bi, paths.Directories.Root)
+	bi.RunDockerBuild(paths.Directories.Root)
 	utils.RunCommand(paths.Scripts.CopyBinaries, bi.DockerTag, paths.Directories.Bin)
 	// TODO organise into functions. Alternatively: put scripts into docker.
 	binRef := filepath.Join(paths.Directories.Bin, "geth-reference")

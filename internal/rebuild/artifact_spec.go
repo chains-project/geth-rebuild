@@ -31,8 +31,8 @@ func (a ArtifactSpec) ToMap() map[string]string {
 }
 
 
-func (a ArtifactSpec) PrintSpec() string {
-	return fmt.Sprintf("ArtifactSpec: Version=%s, Os=%s, Arch=%s, Commit=%s, ShortCommit=%s",
+func (a ArtifactSpec) String() string {
+	return fmt.Sprintf("ArtifactSpec: (Version:%s, Os:%s, Arch:%s, Commit:%s, ShortCommit:%s)",
 		a.Version, a.Os, a.Arch, a.Commit, a.ShortCommit)
 }
 

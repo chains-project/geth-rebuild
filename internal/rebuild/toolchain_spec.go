@@ -49,8 +49,8 @@ func (t ToolchainSpec) ToMap() map[string]string {
 	}
 }
 
-func (t ToolchainSpec) PrintSpec() string {
-	return fmt.Sprintf("ToolchainSpec: GoVersion=%s, CC=%s, BuildCmd=%s",
+func (t ToolchainSpec) String() string {
+	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, CC:%s, BuildCmd:%s)",
 		t.GoVersion, t.CC, t.BuildCmd)
 }
 

@@ -49,8 +49,8 @@ func (u DockerSpec) ToMap() map[string]string {
 	}
 }
 
-func (u DockerSpec) PrintSpec() string {
-	return fmt.Sprintf("UbuntuSpec: Dist=%s, ElfTarget=%s, Packages=%v",
+func (u DockerSpec) String() string {
+	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ElfTarget:%s, Packages:%v)",
 		u.UbuntuDist, u.ElfTarget, u.Packages)
 }
 
