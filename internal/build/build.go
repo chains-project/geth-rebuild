@@ -35,14 +35,13 @@ func (bi BuildInput) getBuildArgs() map[string]string {
 	return buildArgs
 }
 
-func (bi BuildInput) printArgs(args ...map[string]string) string {
-	var str string
-	for _, arg := range args {
-		for key, value := range arg {
-			str += fmt.Sprintf("%s=%s\n", key, value)
-		}
+func (bi BuildInput) PrintArgs() {
+	args := bi.getBuildArgs()
+	var str string = "\n[BUILD ARGUMENTS]\n\n"
+	for key, value := range args {
+		str += fmt.Sprintf("%s=%s\n", key, value)
 	}
-	return str
+	fmt.Println(str)
 }
 
 // Starts a reproduing docker build for dockerfile at `dockerDir` using configured build argument in `bi`
@@ -51,7 +50,6 @@ func RunDockerBuild(bi BuildInput, dockerDir string) error {
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
 	args := bi.getBuildArgs()
-	bi.printArgs(args)
 
 	for key, value := range args {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
