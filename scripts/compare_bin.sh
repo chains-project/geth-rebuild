@@ -3,7 +3,7 @@
 set -e
 
 BIN_REF=$1
-BIN_REP=$1
+BIN_REP=$2
 
 if [ -z "$BIN_REF"  ] || [ -z "$BIN_REP" ]; then
   echo "Usage: $0 <bin> <bin>"

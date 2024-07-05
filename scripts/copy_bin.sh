@@ -18,8 +18,8 @@ if [ -f "$OUTPUT_DIR/$REF" ]; then
     rm "$OUTPUT_DIR/$REF"
 fi
 
-if [ -f "$REP" ]; then
-    rm "$REP"
+if [ -f "$OUTPUT_DIR/$REP" ]; then
+    rm "$OUTPUT_DIR/$REP"
 fi
 
 # run container in detached mode
@@ -28,8 +28,8 @@ CONTAINER_ID=$(docker run -d "$DOCKER_TAG" /bin/sh) ||  { echo "failed to start 
 
 # copy binaries and stop container
 echo "Copying binaries..."
-docker cp -q "$CONTAINER_ID:/bin/$REF" "$OUTPUT_DIR"  || { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
-docker cp -q "$CONTAINER_ID:/bin/$REP" "$OUTPUT_DIR" ||   { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
+docker cp "$CONTAINER_ID:/bin/$REF" "$OUTPUT_DIR"  || { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
+docker cp "$CONTAINER_ID:/bin/$REP" "$OUTPUT_DIR" ||   { echo "failed to copy /bin/geth-reference to $OUTPUT_DIR"; exit 1; }
 echo "Stopping container $CONTAINER_ID"
 docker stop "$CONTAINER_ID" || { echo "error: container id not found"; exit 1; }
 
