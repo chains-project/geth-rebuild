@@ -1,4 +1,4 @@
-package build
+package rebuild
 
 import (
 	"path/filepath"

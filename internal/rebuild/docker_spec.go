@@ -1,4 +1,4 @@
-package build
+package rebuild
 
 import (
 	"fmt"
@@ -9,13 +9,14 @@ import (
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type UbuntuSpec struct {
-	Dist      string
-	ElfTarget string
-	Packages  []string
+type DockerSpec struct {
+	UbuntuDist    string
+	ElfTarget     string
+	Packages      []string
+	CompareScript string
 }
 
-func NewUbuntuSpec(afs ArtifactSpec, paths utils.Paths) (ub UbuntuSpec, err error) {
+func NewDockerSpec(afs ArtifactSpec, paths utils.Paths) (ub DockerSpec, err error) {
 	elfTarget, err := getElfTarget(afs.Os, afs.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
@@ -31,25 +32,26 @@ func NewUbuntuSpec(afs ArtifactSpec, paths utils.Paths) (ub UbuntuSpec, err erro
 		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
 	}
 
-	ub = UbuntuSpec{
-		Dist:      dist,
-		ElfTarget: elfTarget,
-		Packages:  packages,
+	ub = DockerSpec{
+		UbuntuDist: dist,
+		ElfTarget:  elfTarget,
+		Packages:   packages,
 	}
 	return ub, nil
 }
 
-func (u UbuntuSpec) ToMap() map[string]string {
+func (u DockerSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST": u.Dist,
-		"ELF_TARGET":  u.ElfTarget,
-		"PACKAGES":    strings.Join(u.Packages, " "),
+		"UBUNTU_DIST":    u.UbuntuDist,
+		"ELF_TARGET":     u.ElfTarget,
+		"PACKAGES":       strings.Join(u.Packages, " "),
+		"COMPARE_SCRIPT": u.CompareScript,
 	}
 }
 
-func (u UbuntuSpec) PrintSpec() string {
+func (u DockerSpec) PrintSpec() string {
 	return fmt.Sprintf("UbuntuSpec: Dist=%s, ElfTarget=%s, Packages=%v",
-		u.Dist, u.ElfTarget, u.Packages)
+		u.UbuntuDist, u.ElfTarget, u.Packages)
 }
 
 // -- helpers ---

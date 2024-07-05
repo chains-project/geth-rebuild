@@ -13,17 +13,14 @@ type Paths struct {
 }
 
 type Directories struct {
-	Root    string
-	Rebuild string
-	Temp    string
-	Geth    string
-	Scripts string
-	Bin     string
+	Root string
+	Temp string
+	Geth string
+	Bin  string
 }
 
 type Files struct {
 	Travis    string
-	Docker    string
 	Checksums string
 }
 
@@ -31,8 +28,8 @@ type Scripts struct {
 	Clone           string
 	Checkout        string
 	StartDocker     string
-	CompareBinaries string
 	CopyBinaries    string
+	CompareBinaries string
 }
 
 // Sets project paths.
@@ -43,15 +40,13 @@ func SetUpPaths() Paths {
 	}
 	paths := Paths{
 		Directories: Directories{
-			Root:    rootDir,
-			Temp:    filepath.Join(rootDir, "tmp"),
-			Geth:    filepath.Join(rootDir, "tmp", "go-ethereum"),
-			Scripts: filepath.Join(rootDir, "scripts"),
-			Bin:     filepath.Join(rootDir, "bin"),
+			Root: rootDir,
+			Temp: filepath.Join(rootDir, "tmp"),
+			Geth: filepath.Join(rootDir, "tmp", "go-ethereum"),
+			Bin:  filepath.Join(rootDir, "bin"),
 		},
 		Files: Files{
 			Travis:    filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
-			Docker:    filepath.Join(rootDir, "Dockerfile"),
 			Checksums: filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
 		},
 		Scripts: Scripts{

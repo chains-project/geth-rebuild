@@ -1,4 +1,4 @@
-package build
+package rebuild
 
 import (
 	"fmt"
@@ -7,16 +7,16 @@ import (
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type BuildInput struct {
-	Toolchain ToolchainSpec
-	Artifact  ArtifactSpec
-	Ubuntu    UbuntuSpec
-	DockerTag string
-}
-
 type Spec interface {
 	ToMap() map[string]string
 	PrintSpec() string
+}
+
+type BuildInput struct {
+	Toolchain ToolchainSpec
+	Artifact  ArtifactSpec
+	Ubuntu    DockerSpec
+	DockerTag string
 }
 
 func (bi BuildInput) getBuildArgs() map[string]string {
@@ -44,8 +44,8 @@ func (bi BuildInput) PrintArgs() {
 	fmt.Println(str)
 }
 
-// Starts a reproduing docker build for dockerfile at `dockerDir` using configured build argument in `bi`
-func RunDockerBuild(bi BuildInput, dockerDir string) error {
+// Starts a reproducing docker build for dockerfile at `dockerDir` using configured build arguments in `bi`
+func (bi BuildInput) RunDockerBuild(dockerDir string) error {
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
@@ -56,10 +56,12 @@ func RunDockerBuild(bi BuildInput, dockerDir string) error {
 	}
 	cmdArgs = append(cmdArgs, dockerDir)
 	// run docker build
-	_, err := utils.RunCommand("docker", cmdArgs...)
+	o, err := utils.RunCommand("docker", cmdArgs...)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("\nout is:\n\n%s", o)
 	return nil
 }
 

@@ -1,20 +1,18 @@
-package build
+package rebuild
 
 import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 type ToolchainSpec struct {
-	GoVersion  string
-	CC         string
-	BuildCmd   string
-	ArmVersion string
-	CVersion   string // TODO retrieve (from binary) (script inside docker?)
+	GoVersion string
+	CC        string
+	BuildCmd  string
+	//CVersion  string // TODO retrieve (from binary) (script inside docker?)
 }
 
 // Returns build configurations for osArch retrieved from build config file (travis.yml).
@@ -34,16 +32,10 @@ func NewToolchainSpec(afs ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, er
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
 
-	env, err := getArmVersion(afs.Os, afs.Arch)
-	if err != nil {
-		return tc, fmt.Errorf("failed to get GOARM: %w", err)
-	}
-
 	tc = ToolchainSpec{
-		GoVersion:  goVersion,
-		CC:         cc,
-		BuildCmd:   cmd,
-		ArmVersion: env,
+		GoVersion: goVersion,
+		CC:        cc,
+		BuildCmd:  cmd,
 	}
 	return tc, nil
 }
@@ -53,35 +45,16 @@ func (t ToolchainSpec) ToMap() map[string]string {
 		"GO_VERSION": t.GoVersion,
 		"C_COMPILER": t.CC,
 		"BUILD_CMD":  t.BuildCmd,
-		"ARM_V":      t.ArmVersion,
 		//"CVersion":   t.CVersion,
 	}
 }
 
 func (t ToolchainSpec) PrintSpec() string {
-	return fmt.Sprintf("ToolchainSpec: GoVersion=%s, CC=%s, BuildCmd=%s, CVersion=%s",
-		t.GoVersion, t.CC, t.BuildCmd, t.CVersion)
+	return fmt.Sprintf("ToolchainSpec: GoVersion=%s, CC=%s, BuildCmd=%s",
+		t.GoVersion, t.CC, t.BuildCmd)
 }
 
 // --- helpers ---
-
-func getArmVersion(ops string, arch string) (string, error) {
-	switch ops {
-	case "linux":
-		switch arch {
-		case "amd64", "386", "arm64":
-			return "", nil
-		case "arm5", "arm6", "arm7":
-			v := strings.Split(arch, "arm")[1]
-			return strings.TrimSpace(v), nil
-		default:
-			return "", fmt.Errorf("no GOARM command found for linux arch `%s`", arch)
-		}
-	default:
-		return "", fmt.Errorf("no GOARM command found for os `%s`", ops)
-	}
-
-}
 
 // Retrieves build commands for os arch in given travis build file (travis.yml). Returns error if not found.
 func getBuildCommand(ops string, arch string, travisFile string) (string, error) {

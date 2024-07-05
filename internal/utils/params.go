@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-// TODO params
+// TODO fix flags parsing issue.
 
 var (
 	// Optional flags
@@ -45,6 +45,9 @@ func ParseFlags() (ops string, arch string, version string, gethDir string, unst
 
 	return ops, arch, version, gethDir, unstableCommit
 }
+
+// TODO use enums for allowed os and allowed arch?
+
 
 // Validates the program arguments
 func ValidateArgs(ops, arch, version string) error { // TODO validate optional program args.
