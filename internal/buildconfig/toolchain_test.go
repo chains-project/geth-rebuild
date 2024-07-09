@@ -1,4 +1,4 @@
-package buildspec
+package buildconfig
 
 import (
 	"path/filepath"

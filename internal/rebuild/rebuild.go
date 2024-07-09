@@ -3,12 +3,12 @@ package rebuild
 import (
 	"fmt"
 
-	"github.com/chains-project/geth-rebuild/internal/buildspec"
+	"github.com/chains-project/geth-rebuild/internal/buildconfig"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 // Starts a reproducing docker build for dockerfile at `dockerDir` using configured build arguments in `bi`
-func RunDockerBuild(bi buildspec.BuildInput) error {
+func RunDockerBuild(bi buildconfig.BuildInput) error {
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 

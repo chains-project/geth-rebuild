@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/chains-project/geth-rebuild/internal/buildspec"
+	"github.com/chains-project/geth-rebuild/internal/buildconfig"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -26,12 +26,12 @@ func init() {
 }
 
 func main() {
-	pa, err := buildspec.ParseArgs()
+	pa, err := buildconfig.ParseArgs()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = buildspec.ValidateInput(pa)
+	err = buildconfig.ValidateInput(pa)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// // artifact specification
-	_, err = buildspec.NewArtifactSpec(pa, paths)
+	_, err = buildconfig.NewArtifactSpec(pa, paths)
 	if err != nil {
 		log.Fatal(err)
 	}

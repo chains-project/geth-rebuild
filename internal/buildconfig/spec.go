@@ -1,4 +1,4 @@
-package buildspec
+package buildconfig
 
 type Spec interface {
 	ToMap() map[string]string
