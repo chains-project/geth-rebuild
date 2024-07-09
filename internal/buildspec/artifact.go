@@ -2,12 +2,11 @@ package buildspec
 
 import (
 	"fmt"
-	"strings"
 
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-// specifies information about reproducing artifact
+// specifies information about the artifact to rebuild
 type ArtifactSpec struct {
 	Version     string
 	Os          string
@@ -33,56 +32,50 @@ func (a ArtifactSpec) String() string {
 		a.Version, a.Os, a.Arch, a.Commit, a.ShortCommit)
 }
 
-// Returns configured ArifactSpec.
-func NewArtifactSpec(ops string, arch string, version string, unstableCommit string, noClone bool, paths utils.Paths) (af ArtifactSpec, err error) {
-	var commit string
-
-	if !noClone {
+// Returns configured Artifact Specification
+func NewArtifactSpec(pa *ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
+	if pa.GethDir == "" {
 		err := cloneGethRepo(paths)
 		if err != nil {
 			return af, err
 		}
 	}
 
-	if unstableCommit != "" {
-		commit = unstableCommit
-		err = checkoutGeth(paths, commit)
+	var commit string
+	if pa.Unstable == "" { // stable release, check out version tag
+		err = checkoutGeth(pa.GethVersion, paths)
 		if err != nil {
 			return af, err
 		}
-	} else {
-		err = checkoutGeth(paths, version)
-		if err != nil {
-			return af, err
-		}
-
 		commit, err = utils.GetGitCommit(paths.Directories.Geth)
 		if err != nil {
 			return af, err
 		}
-	}
 
-	armVersion, err := getArmVersion(ops, arch)
-
-	if err != nil {
-		return af, fmt.Errorf("failed to get GOARM: %w", err)
+	} else { // unstable build, check out at commit
+		err = checkoutGeth(pa.Unstable, paths)
+		if err != nil {
+			return af, err
+		}
+		commit = pa.Unstable
 	}
 
 	af = ArtifactSpec{
-		Version:     version,
-		Os:          ops,
-		Arch:        arch,
+		Version:     pa.GethVersion,
+		Os:          string(pa.GOOS),
+		Arch:        string(pa.GOARCH),
 		Commit:      commit,
 		ShortCommit: commit[0:8],
-		ArmVersion:  armVersion,
 	}
 
 	return af, nil
 }
 
-// -- helpers --
+// **
+// HELPERS
+// **
 
-// Runs clone script as specified at `script`
+// Runs clone script as specified in paths struct
 func cloneGethRepo(paths utils.Paths) error {
 	_, err := utils.RunCommand(paths.Scripts.Clone, paths.Directories.Temp)
 	if err != nil {
@@ -91,28 +84,11 @@ func cloneGethRepo(paths utils.Paths) error {
 	return nil
 }
 
-func checkoutGeth(paths utils.Paths, versionOrCommit string) error {
+// Checks out geth at a tagged version or a commit
+func checkoutGeth(versionOrCommit string, paths utils.Paths) error {
 	_, err := utils.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, versionOrCommit)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// Returns the ARM version if arch is arm5|arm6
-func getArmVersion(ops string, arch string) (string, error) {
-	switch ops {
-	case "linux":
-		switch arch {
-		case "amd64", "386", "arm64":
-			return "", nil
-		case "arm5", "arm6", "arm7":
-			v := strings.Split(arch, "arm")[1]
-			return strings.TrimSpace(v), nil
-		default:
-			return "", fmt.Errorf("no GOARM command found. Invalid linux arch `%s`", arch)
-		}
-	default:
-		return "", fmt.Errorf("no GOARM command found. Invalid os `%s`", ops)
-	}
 }

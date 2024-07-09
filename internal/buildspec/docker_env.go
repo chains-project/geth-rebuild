@@ -13,9 +13,16 @@ type DockerEnvSpec struct {
 	UbuntuDist string
 	ElfTarget  string
 	Packages   []string
+	EnvVars    []string
 }
 
 func NewDockerSpec(af ArtifactSpec, paths utils.Paths) (ub DockerEnvSpec, err error) {
+
+	// armVersion, err := getArmVersion(string(pa.GOOS), string(pa.GOARCH))
+	// if err != nil {
+	// 	return af, fmt.Errorf("failed to get GOARM: %w", err)
+	// }
+
 	elfTarget, err := getElfTarget(af.Os, af.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
@@ -117,4 +124,22 @@ func getUbuntuPackages(ops string, arch string) (packages []string, err error) {
 		return nil, fmt.Errorf("no packages found for os `%s`", ops)
 	}
 	return
+}
+
+// Returns the ARM version if arch is arm5|arm6|arm7
+func getArmVersion(ops string, arch string) (string, error) {
+	switch ops {
+	case "linux":
+		switch arch {
+		case "amd64", "386", "arm64":
+			return "", nil
+		case "arm5", "arm6", "arm7":
+			v := strings.Split(arch, "arm")[1]
+			return strings.TrimSpace(v), nil
+		default:
+			return "", fmt.Errorf("no GOARM command found. Invalid linux arch `%s`", arch)
+		}
+	default:
+		return "", fmt.Errorf("no GOARM command found. Invalid os `%s`", ops)
+	}
 }

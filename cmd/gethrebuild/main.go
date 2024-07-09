@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/chains-project/geth-rebuild/internal/buildspec"
@@ -32,34 +31,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("OS: %s\n", pa.GOOS)
-	fmt.Printf("Arch: %s\n", pa.GOARCH)
-	fmt.Printf("Version: %s\n", pa.GethVersion)
-	fmt.Printf("Geth Dir: %s\n", pa.GethDir)
-	fmt.Printf("Unstable Commit: %s\n", pa.Unstable)
-
 	err = buildspec.ValidateInput(pa)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-
-	// Validate inputs
-	// err := buildspec.ValidateInput(goOs, goArch, gethVersion)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// var noClone bool // TODO ugly code
-	// if gethDir != "" {
-	// 	paths.Directories.Geth = gethDir
-	// 	noClone = true
-	// }
+	if pa.GethDir != "" {
+		paths.Directories.Geth = pa.GethDir
+	}
 
 	// // artifact specification
-	// af, err := config.NewArtifactSpec(ops, arch, version, unstableHash, noClone, paths)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	_, err = buildspec.NewArtifactSpec(pa, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// // toolchain specification
 	// tc, err := config.NewToolchainSpec(af, paths)
