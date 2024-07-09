@@ -1,4 +1,4 @@
-package rebuild
+package buildspec
 
 import (
 	"fmt"
@@ -6,23 +6,22 @@ import (
 	"regexp"
 	"strings"
 
-	utils "github.com/chains-project/geth-rebuild/internal/utils"
+	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type DockerSpec struct {
-	UbuntuDist    string
-	ElfTarget     string
-	Packages      []string
-	CompareScript string
+type DockerEnvSpec struct {
+	UbuntuDist string
+	ElfTarget  string
+	Packages   []string
 }
 
-func NewDockerSpec(afs ArtifactSpec, paths utils.Paths) (ub DockerSpec, err error) {
-	elfTarget, err := getElfTarget(afs.Os, afs.Arch)
+func NewDockerSpec(af ArtifactSpec, paths utils.Paths) (ub DockerEnvSpec, err error) {
+	elfTarget, err := getElfTarget(af.Os, af.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
 	}
 
-	packages, err := getUbuntuPackages(afs.Os, afs.Arch)
+	packages, err := getUbuntuPackages(af.Os, af.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get Ubuntu packages: %w", err)
 	}
@@ -32,7 +31,7 @@ func NewDockerSpec(afs ArtifactSpec, paths utils.Paths) (ub DockerSpec, err erro
 		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
 	}
 
-	ub = DockerSpec{
+	ub = DockerEnvSpec{
 		UbuntuDist: dist,
 		ElfTarget:  elfTarget,
 		Packages:   packages,
@@ -40,21 +39,22 @@ func NewDockerSpec(afs ArtifactSpec, paths utils.Paths) (ub DockerSpec, err erro
 	return ub, nil
 }
 
-func (u DockerSpec) ToMap() map[string]string {
+func (u DockerEnvSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST":    u.UbuntuDist,
-		"ELF_TARGET":     u.ElfTarget,
-		"PACKAGES":       strings.Join(u.Packages, " "),
-		"COMPARE_SCRIPT": u.CompareScript,
+		"UBUNTU_DIST": u.UbuntuDist,
+		"ELF_TARGET":  u.ElfTarget,
+		"PACKAGES":    strings.Join(u.Packages, " "),
 	}
 }
 
-func (u DockerSpec) String() string {
+func (u DockerEnvSpec) String() string {
 	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ElfTarget:%s, Packages:%v)",
 		u.UbuntuDist, u.ElfTarget, u.Packages)
 }
 
-// -- helpers ---
+//
+// HELPERS
+//
 
 // Retrieves Ubuntu distribution as defined in `travisFile` (dist : dddd)
 func getUbuntuDist(travisFile string) (dist string, err error) {

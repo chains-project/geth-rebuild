@@ -1,10 +1,11 @@
-package rebuild
+package buildspec
 
 import (
 	"reflect"
 	"testing"
 )
 
+// TODO fix
 func TestGetElfTarget(t *testing.T) {
 	tests := []struct {
 		ops       string

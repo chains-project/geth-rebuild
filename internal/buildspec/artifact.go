@@ -1,4 +1,4 @@
-package rebuild
+package buildspec
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
-
-type OS string
 
 // specifies information about reproducing artifact
 type ArtifactSpec struct {
@@ -30,20 +28,19 @@ func (a ArtifactSpec) ToMap() map[string]string {
 	}
 }
 
-
 func (a ArtifactSpec) String() string {
 	return fmt.Sprintf("ArtifactSpec: (Version:%s, Os:%s, Arch:%s, Commit:%s, ShortCommit:%s)",
 		a.Version, a.Os, a.Arch, a.Commit, a.ShortCommit)
 }
 
 // Returns configured ArifactSpec.
-func NewArtifactSpec(ops string, arch string, version string, unstableCommit string, noClone bool, paths utils.Paths) (afs ArtifactSpec, err error) {
+func NewArtifactSpec(ops string, arch string, version string, unstableCommit string, noClone bool, paths utils.Paths) (af ArtifactSpec, err error) {
 	var commit string
 
 	if !noClone {
 		err := cloneGethRepo(paths)
 		if err != nil {
-			return afs, err
+			return af, err
 		}
 	}
 
@@ -51,27 +48,27 @@ func NewArtifactSpec(ops string, arch string, version string, unstableCommit str
 		commit = unstableCommit
 		err = checkoutGeth(paths, commit)
 		if err != nil {
-			return afs, err
+			return af, err
 		}
 	} else {
 		err = checkoutGeth(paths, version)
 		if err != nil {
-			return afs, err
+			return af, err
 		}
 
 		commit, err = utils.GetGitCommit(paths.Directories.Geth)
 		if err != nil {
-			return afs, err
+			return af, err
 		}
 	}
 
 	armVersion, err := getArmVersion(ops, arch)
 
 	if err != nil {
-		return afs, fmt.Errorf("failed to get GOARM: %w", err)
+		return af, fmt.Errorf("failed to get GOARM: %w", err)
 	}
 
-	afs = ArtifactSpec{
+	af = ArtifactSpec{
 		Version:     version,
 		Os:          ops,
 		Arch:        arch,
@@ -80,7 +77,7 @@ func NewArtifactSpec(ops string, arch string, version string, unstableCommit str
 		ArmVersion:  armVersion,
 	}
 
-	return afs, nil
+	return af, nil
 }
 
 // -- helpers --

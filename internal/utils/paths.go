@@ -13,10 +13,11 @@ type Paths struct {
 }
 
 type Directories struct {
-	Root string
-	Temp string
-	Geth string
-	Bin  string
+	Root   string
+	Docker string
+	Temp   string
+	Geth   string
+	Bin    string
 }
 
 type Files struct {
@@ -40,21 +41,22 @@ func SetUpPaths() Paths {
 	}
 	paths := Paths{
 		Directories: Directories{
-			Root: rootDir,
-			Temp: filepath.Join(rootDir, "tmp"),
-			Geth: filepath.Join(rootDir, "tmp", "go-ethereum"),
-			Bin:  filepath.Join(rootDir, "bin"),
+			Root:   rootDir,
+			Docker: rootDir,
+			Temp:   filepath.Join(rootDir, "tmp"),
+			Geth:   filepath.Join(rootDir, "tmp", "go-ethereum"),
+			Bin:    filepath.Join(rootDir, "bin"),
 		},
 		Files: Files{
 			Travis:    filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
 			Checksums: filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
 		},
 		Scripts: Scripts{
-			Clone:           filepath.Join(rootDir, "scripts", "clone.sh"),
-			Checkout:        filepath.Join(rootDir, "scripts", "checkout.sh"),
-			StartDocker:     filepath.Join(rootDir, "scripts", "start_docker.sh"),
-			CopyBinaries:    filepath.Join(rootDir, "scripts", "copy_bin.sh"),
-			CompareBinaries: filepath.Join(rootDir, "scripts", "compare_bin.sh"),
+			Clone:           filepath.Join(rootDir, "internal", "scripts", "clone.sh"),
+			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
+			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
+			CopyBinaries:    filepath.Join(rootDir, "internal", "scripts", "copy_bin.sh"),
+			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_bin.sh"),
 		},
 	}
 	return paths

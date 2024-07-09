@@ -86,12 +86,11 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-// Contains for a string slice
-func Contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
+
+func StartDocker(paths Paths) error {
+	_, err := RunCommand(paths.Scripts.StartDocker)
+	if err != nil {
+		return err
 	}
-	return false
+	return nil
 }

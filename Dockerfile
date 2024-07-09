@@ -2,7 +2,7 @@ ARG UBUNTU_DIST=""
 
 FROM ubuntu:${UBUNTU_DIST} as builder
 
-#ARG GETH_DIR=""
+ARG GETH_SRC_DIR="./tmp/go-ethereum"
 ARG GO_VERSION=""
 ARG GETH_VERSION=""
 ARG OS="" 
@@ -44,13 +44,13 @@ RUN wget ${REF_URL} && \
 
 # Copy geth repo and rebuild reference binary
 # TODO decide if should clone again
-ENV GETH_DIR=/go-ethereum
-COPY ./tmp/go-ethereum ${GETH_DIR} 
+ENV GETH_DEST_DIR=/go-ethereum
+COPY ${GETH_SRC_DIR} ${GETH_DEST_DIR} 
 
-RUN cd ${GETH_DIR} && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
+RUN cd ${GETH_DEST_DIR}  && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
     ${BUILD_CMD} ./cmd/geth
 
-RUN cd ${GETH_DIR}/build/bin && \
+RUN cd ${GETH_DEST_DIR}/build/bin && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
     mv geth ${REPRODUCE_DEST}
 
@@ -59,5 +59,3 @@ FROM alpine:latest
 
 COPY --from=builder /bin/geth-reference /bin/geth-reference
 COPY --from=builder /bin/geth-reproduce /bin/geth-reproduce
-
-# TODO compare here??

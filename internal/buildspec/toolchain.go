@@ -1,11 +1,11 @@
-package rebuild
+package buildspec
 
 import (
 	"fmt"
 	"os"
 	"regexp"
 
-	utils "github.com/chains-project/geth-rebuild/internal/utils"
+	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 type ToolchainSpec struct {
@@ -16,18 +16,18 @@ type ToolchainSpec struct {
 }
 
 // Returns build configurations for osArch retrieved from build config file (travis.yml).
-func NewToolchainSpec(afs ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err error) {
+func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err error) {
 	goVersion, err := getGoVersion(paths.Files.Checksums)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get Go version: %w", err)
 	}
 
-	cmd, err := getBuildCommand(afs.Os, afs.Arch, paths.Files.Travis)
+	cmd, err := getBuildCommand(af.Os, af.Arch, paths.Files.Travis)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
 
-	cc, err := getCC(afs.Os, afs.Arch)
+	cc, err := getCC(af.Os, af.Arch)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
@@ -54,7 +54,9 @@ func (t ToolchainSpec) String() string {
 		t.GoVersion, t.CC, t.BuildCmd)
 }
 
-// --- helpers ---
+//
+// HELPERS
+//
 
 // Retrieves build commands for os arch in given travis build file (travis.yml). Returns error if not found.
 func getBuildCommand(ops string, arch string, travisFile string) (string, error) {

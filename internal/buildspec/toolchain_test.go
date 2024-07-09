@@ -1,9 +1,12 @@
-package rebuild
+package buildspec
 
 import (
 	"path/filepath"
 	"testing"
 )
+
+
+// TODO fix
 
 func TestGetBuildCommand(t *testing.T) {
 	travisFile := filepath.Join("testdata", ".travis.yml")
