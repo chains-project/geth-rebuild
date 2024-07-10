@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/chains-project/geth-rebuild/internal/buildconfig"
+	config "github.com/chains-project/geth-rebuild/internal/buildconfig"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -34,27 +35,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-
-	// // artifact specification
-	af, err := buildconfig.NewArtifactSpec(pa, paths)
+	// artifact specification
+	af, err := config.NewArtifactSpec(pa, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// toolchain specification
-	_, err = buildconfig.NewToolchainSpec(af, paths)
+	tc, err := config.NewToolchainSpec(af, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// // ubuntu specification
-	// de, err := config.NewDockerSpec(af, paths)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// build environment specification
+	env, err := config.NewEnvSpec(af, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// bi := config.NewBuildInput(af, tc, de, paths)
-	// fmt.Println(bi)
+	bi := config.NewBuildInput(af, tc, env, paths)
+	fmt.Println(bi)
 
 	// err = utils.StartDocker(paths)
 	// if err != nil {

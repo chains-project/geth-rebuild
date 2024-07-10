@@ -64,13 +64,16 @@ func GetRootDir(base string) (string, error) {
 func GetGitCommit(dir string) (string, error) {
 	dirFlag := fmt.Sprintf("--git-dir=%s/.git", dir)
 	treeFlag := fmt.Sprintf("--work-tree=%s", dir)
+
 	commit, err := RunCommand("git", dirFlag, treeFlag, "log", "-1", "--format=%H")
+
 	if err != nil {
 		return "", err
 	}
 	if commit == "" {
 		return "", fmt.Errorf("no commit found in dir %s", dir)
 	}
+	
 	commit = strings.ReplaceAll(commit, "\n", "")
 	return commit, nil
 }

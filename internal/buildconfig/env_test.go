@@ -44,7 +44,7 @@ func TestGetUbuntuPackages(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := getUbuntuPackages(tt.ops, tt.arch)
+		got, err := getUbuntuDeps(tt.ops, tt.arch)
 		if (err != nil) != tt.expectErr {
 			t.Errorf("getUbuntuPackages() error = %v, expectErr %v\n%v", err, tt.expectErr, tt)
 		}

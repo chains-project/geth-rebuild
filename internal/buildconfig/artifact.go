@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	utils "github.com/chains-project/geth-rebuild/internal/utils"
+	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 // specifies information about the artifact to rebuild
@@ -12,28 +12,26 @@ type ArtifactSpec struct {
 	Version     string
 	Os          string
 	Arch        string
-	ArmVersion  string
 	Commit      string
 	ShortCommit string
 }
 
-func (a ArtifactSpec) ToMap() map[string]string {
+func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GETH_VERSION": a.Version,
-		"OS":           a.Os,
-		"ARCH":         a.Arch,
-		"ARM_V":        a.ArmVersion,
-		"COMMIT":       a.Commit,
-		"SHORT_COMMIT": a.ShortCommit,
+		"GETH_VERSION": af.Version,
+		"OS":           af.Os,
+		"ARCH":         af.Arch,
+		"COMMIT":       af.Commit,
+		"SHORT_COMMIT": af.ShortCommit,
 	}
 }
 
-func (a ArtifactSpec) String() string {
+func (af ArtifactSpec) String() string {
 	return fmt.Sprintf("ArtifactSpec: (Version:%s, Os:%s, Arch:%s, Commit:%s, ShortCommit:%s)",
-		a.Version, a.Os, a.Arch, a.Commit, a.ShortCommit)
+		af.Version, af.Os, af.Arch, af.Commit, af.ShortCommit)
 }
 
-// Returns configured Artifact Specification
+// Returns configured rebuild Artifact Specification
 func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
 	if !pa.NoClone {
 		err := cloneGethRepo(paths)
@@ -99,7 +97,7 @@ func cloneGethRepo(paths utils.Paths) error {
 	return nil
 }
 
-// Checks out geth at a tagged version or a commit
+// Invokes script that checks out geth at a tagged version or commit
 func checkoutGeth(versionOrCommit string, paths utils.Paths) error {
 	_, err := utils.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, versionOrCommit)
 	if err != nil {

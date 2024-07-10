@@ -8,7 +8,7 @@ import (
 )
 
 // Starts a reproducing docker build for dockerfile at `dockerDir` using configured build arguments in `bi`
-func RunDockerBuild(bi buildconfig.BuildInput) error {
+func RunDockerBuild(bi buildconfig.BuildArgs) error {
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 

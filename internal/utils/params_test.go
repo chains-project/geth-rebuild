@@ -1,4 +1,4 @@
-package buildconfig
+package utils
 
 // TODO fix
 // import (

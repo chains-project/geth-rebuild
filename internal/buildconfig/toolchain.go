@@ -11,11 +11,11 @@ import (
 type ToolchainSpec struct {
 	GoVersion string
 	CC        string
-	BuildCmd  string
+	BuildCmd  string // TODO move ?
 	//CVersion  string // TODO retrieve (from binary) (script inside docker?)
 }
 
-// Returns build configurations for osArch retrieved from build config file (travis.yml).
+// Returns configured rebuild Toolchain specification
 func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err error) {
 	goVersion, err := getGoVersion(paths.Files.Checksums)
 	if err != nil {
@@ -40,26 +40,26 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 	return tc, nil
 }
 
-func (t ToolchainSpec) ToMap() map[string]string {
+func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GO_VERSION": t.GoVersion,
-		"C_COMPILER": t.CC,
-		"BUILD_CMD":  t.BuildCmd,
+		"GO_VERSION": tc.GoVersion,
+		"C_COMPILER": tc.CC,
+		"BUILD_CMD":  tc.BuildCmd,
 		//"CVersion":   t.CVersion,
 	}
 }
 
-func (t ToolchainSpec) String() string {
+func (tc ToolchainSpec) String() string {
 	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, CC:%s, BuildCmd:%s)",
-		t.GoVersion, t.CC, t.BuildCmd)
+		tc.GoVersion, tc.CC, tc.BuildCmd)
 }
 
-//
+// **
 // HELPERS
-//
+// **
 
 // Retrieves build commands for os arch in given travis build file (travis.yml). Returns error if not found.
-func getBuildCommand(ops string, arch string, travisFile string) (string, error) {
+func getBuildCommand(ops string, arch string, travisFile string) (string, error) { // TODO can change this to standard command
 	var pattern string
 
 	switch ops {
@@ -97,7 +97,7 @@ func getBuildCommand(ops string, arch string, travisFile string) (string, error)
 	cmd := reArm.Find(line)
 
 	if cmd == nil {
-		return "", fmt.Errorf("no build command found for architecture `%s` from line %s`", arch, line)
+		return "", fmt.Errorf("no build command found for architecture `%s` in file `%s` from line %s`", arch, travisFile, line)
 	}
 
 	return string(cmd), nil
@@ -124,7 +124,6 @@ func getGoVersion(checksumFile string) (string, error) {
 
 		return "", fmt.Errorf("no go version derivable form line %s in file `%s`", goTar, checksumFile)
 	}
-
 	return string(match), nil
 }
 

@@ -9,62 +9,65 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type DockerEnvSpec struct {
-	UbuntuDist string
-	ElfTarget  string
-	Packages   []string
-	EnvVars    []string
+type EnvSpec struct {
+	UbuntuDist        string
+	ElfTarget         string
+	BuildDependencies []string
+	EnvVars           []string
 }
 
-func NewDockerSpec(af ArtifactSpec, paths utils.Paths) (ub DockerEnvSpec, err error) {
-
-	// armVersion, err := getArmVersion(string(pa.GOOS), string(pa.GOARCH))
-	// if err != nil {
-	// 	return af, fmt.Errorf("failed to get GOARM: %w", err)
-	// }
+// Returns configured rebuild Environment specification
+func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (ub EnvSpec, err error) {
+	dist, err := getUbuntuDist(paths.Files.Travis) // TODO !!!
+	if err != nil {
+		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
+	}
 
 	elfTarget, err := getElfTarget(af.Os, af.Arch)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
 	}
 
-	packages, err := getUbuntuPackages(af.Os, af.Arch)
+	deps, err := getUbuntuDeps(af.Os, af.Arch)
 	if err != nil {
-		return ub, fmt.Errorf("failed to get Ubuntu packages: %w", err)
+		return ub, fmt.Errorf("failed to get Ubuntu dependencies: %w", err)
 	}
 
-	dist, err := getUbuntuDist(paths.Files.Travis)
+	envVars, err := getEnvVars(af)
+
 	if err != nil {
-		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
+		return ub, fmt.Errorf("failed to get environment arguments: %w", err)
 	}
 
-	ub = DockerEnvSpec{
-		UbuntuDist: dist,
-		ElfTarget:  elfTarget,
-		Packages:   packages,
+	ub = EnvSpec{
+		UbuntuDist:        dist,
+		ElfTarget:         elfTarget,
+		BuildDependencies: deps,
+		EnvVars:           envVars,
 	}
 	return ub, nil
 }
 
-func (u DockerEnvSpec) ToMap() map[string]string {
+func (u EnvSpec) ToMap() map[string]string {
 	return map[string]string{
 		"UBUNTU_DIST": u.UbuntuDist,
 		"ELF_TARGET":  u.ElfTarget,
-		"PACKAGES":    strings.Join(u.Packages, " "),
+		"PACKAGES":    strings.Join(u.BuildDependencies, " "),
+		"ENV_VARS":    strings.Join(u.EnvVars, " "),
 	}
 }
 
-func (u DockerEnvSpec) String() string {
+func (u EnvSpec) String() string {
 	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ElfTarget:%s, Packages:%v)",
-		u.UbuntuDist, u.ElfTarget, u.Packages)
+		u.UbuntuDist, u.ElfTarget, u.BuildDependencies)
 }
 
-//
+// **
 // HELPERS
-//
+// **
 
 // Retrieves Ubuntu distribution as defined in `travisFile` (dist : dddd)
-func getUbuntuDist(travisFile string) (dist string, err error) {
+func getUbuntuDist(travisFile string) (dist string, err error) { // TODO this logic does not work due to travis ci issue
 	fileContent, err := os.ReadFile(travisFile)
 	if err != nil {
 		return "", fmt.Errorf("error reading file %s: %v", travisFile, err)
@@ -104,7 +107,7 @@ func getElfTarget(ops string, arch string) (elfTarget string, err error) {
 }
 
 // Returns common and architecture specific package for osArc.
-func getUbuntuPackages(ops string, arch string) (packages []string, err error) {
+func getUbuntuDeps(ops string, arch string) (packages []string, err error) {
 	packages = append(packages, "git", "ca-certificates", "wget", "binutils") // common
 	switch ops {
 	case "linux":
@@ -124,6 +127,17 @@ func getUbuntuPackages(ops string, arch string) (packages []string, err error) {
 		return nil, fmt.Errorf("no packages found for os `%s`", ops)
 	}
 	return
+}
+
+func getEnvVars(af ArtifactSpec) (envVars []string, err error) {
+	armVersion, err := getArmVersion(af.Os, af.Arch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GOARM: %w", err)
+	}
+
+	envVars = append(envVars, "CGO_ENABLED=1")
+	envVars = append(envVars, fmt.Sprintf("GOARM=%s", armVersion))
+	return envVars, nil
 }
 
 // Returns the ARM version if arch is arm5|arm6|arm7
