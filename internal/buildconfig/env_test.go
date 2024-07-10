@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-// TODO fix
 func TestGetElfTarget(t *testing.T) {
 	tests := []struct {
 		ops       string
@@ -30,14 +29,14 @@ func TestGetElfTarget(t *testing.T) {
 	}
 }
 
-func TestGetUbuntuPackages(t *testing.T) {
+func TestGetUbuntuDeps(t *testing.T) {
 	tests := []struct {
 		ops       string
 		arch      string
 		want      []string
 		expectErr bool
 	}{
-		{"linux", "amd64", []string{"git", "ca-certificates", "wget", "binutils"}, false},
+		{"linux", "amd64", []string{"git", "ca-certificates", "wget", "binutils", "gcc-multilib"}, false},
 		{"linux", "arm64", []string{"git", "ca-certificates", "wget", "binutils", "libc6-dev-arm64-cross"}, false},
 		{"linux", "arm42", nil, true},
 		{"windows", "amd64", nil, true},

@@ -41,6 +41,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 	}
 
 	var commit string
+	
 	if pa.Unstable == "" { // stable release, check out version tag
 		err = checkoutGeth(pa.GethVersion, paths)
 		if err != nil {

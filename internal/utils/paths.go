@@ -21,8 +21,10 @@ type Directories struct {
 }
 
 type Files struct {
-	Travis    string
-	Checksums string
+	Travis       string
+	Checksums    string
+	ReferenceBin string
+	RebuildBin   string
 }
 
 type Scripts struct {
@@ -48,8 +50,10 @@ func SetUpPaths() Paths {
 			Bin:    filepath.Join(rootDir, "bin"),
 		},
 		Files: Files{
-			Travis:    filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
-			Checksums: filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
+			Travis:       filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
+			Checksums:    filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
+			ReferenceBin: filepath.Join(rootDir, "bin", "geth-reference"),
+			RebuildBin:   filepath.Join(rootDir, "bin", "geth-reproduce"),
 		},
 		Scripts: Scripts{
 			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),

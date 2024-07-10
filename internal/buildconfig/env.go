@@ -10,10 +10,10 @@ import (
 )
 
 type EnvSpec struct {
-	UbuntuDist        string
-	ElfTarget         string
-	BuildDependencies []string
-	EnvVars           []string
+	UbuntuDist   string
+	ElfTarget    string
+	ArmVersion   string
+	Dependencies []string
 }
 
 // Returns configured rebuild Environment specification
@@ -33,33 +33,32 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (ub EnvSpec, err error) {
 		return ub, fmt.Errorf("failed to get Ubuntu dependencies: %w", err)
 	}
 
-	envVars, err := getEnvVars(af)
-
+	armV, err := getArmVersion(af.Os, af.Arch)
 	if err != nil {
-		return ub, fmt.Errorf("failed to get environment arguments: %w", err)
+		return ub, fmt.Errorf("failed to get arm version: %w", err)
 	}
 
 	ub = EnvSpec{
-		UbuntuDist:        dist,
-		ElfTarget:         elfTarget,
-		BuildDependencies: deps,
-		EnvVars:           envVars,
+		UbuntuDist:   dist,
+		ElfTarget:    elfTarget,
+		Dependencies: deps,
+		ArmVersion:   armV,
 	}
 	return ub, nil
 }
 
-func (u EnvSpec) ToMap() map[string]string {
+func (ub EnvSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST": u.UbuntuDist,
-		"ELF_TARGET":  u.ElfTarget,
-		"PACKAGES":    strings.Join(u.BuildDependencies, " "),
-		"ENV_VARS":    strings.Join(u.EnvVars, " "),
+		"UBUNTU_DIST": ub.UbuntuDist,
+		"ELF_TARGET":  ub.ElfTarget,
+		"UB_DEPS":     strings.Join(ub.Dependencies, " "),
+		"GOARM":       ub.ArmVersion,
 	}
 }
 
-func (u EnvSpec) String() string {
-	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ElfTarget:%s, Packages:%v)",
-		u.UbuntuDist, u.ElfTarget, u.BuildDependencies)
+func (ub EnvSpec) String() string {
+	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ELFTarget:%s, Packages:%v, ARMV: %s)",
+		ub.UbuntuDist, ub.ElfTarget, ub.Dependencies, ub.ArmVersion)
 }
 
 // **
@@ -94,7 +93,7 @@ func getElfTarget(ops string, arch string) (elfTarget string, err error) {
 		case "386":
 			elfTarget = "elf32-i386"
 		case "arm64":
-			elfTarget = "elf64-littleaarch64"
+			elfTarget = "elf64-littleaarch64" //"elf64-littleaarch64"
 		case "arm5", "arm6", "arm7":
 			elfTarget = "elf32-little"
 		default:
@@ -113,13 +112,13 @@ func getUbuntuDeps(ops string, arch string) (packages []string, err error) {
 	case "linux":
 		switch arch {
 		case "amd64", "386":
-			return // no arch specific packages
+			packages = append(packages, "gcc-multilib")
 		case "arm64":
-			packages = append(packages, "libc6-dev-arm64-cross") // TODO hard coded - can use regex ?
+			packages = append(packages, "libc6-dev-arm64-cross", "gcc-aarch64-linux-gnu") // TODO hard coded - can use regex ?
 		case "arm5", "arm6":
-			packages = append(packages, "libc6-dev-armel-cross")
+			packages = append(packages, "libc6-dev-armel-cross", "gcc-arm-linux-gnueabi")
 		case "arm7":
-			packages = append(packages, "libc6-dev-armhf-cross")
+			packages = append(packages, "libc6-dev-armhf-cross", "gcc-arm-linux-gnueabihf")
 		default:
 			return nil, fmt.Errorf("no packages found for linux arch `%s`", arch)
 		}
@@ -127,17 +126,6 @@ func getUbuntuDeps(ops string, arch string) (packages []string, err error) {
 		return nil, fmt.Errorf("no packages found for os `%s`", ops)
 	}
 	return
-}
-
-func getEnvVars(af ArtifactSpec) (envVars []string, err error) {
-	armVersion, err := getArmVersion(af.Os, af.Arch)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get GOARM: %w", err)
-	}
-
-	envVars = append(envVars, "CGO_ENABLED=1")
-	envVars = append(envVars, fmt.Sprintf("GOARM=%s", armVersion))
-	return envVars, nil
 }
 
 // Returns the ARM version if arch is arm5|arm6|arm7

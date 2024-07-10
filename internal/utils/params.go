@@ -66,7 +66,7 @@ func ParseArgs() (*ProgramArgs, error) {
 
 	// parse optional flags into ProgramArgs struct
 	optional := flag.NewFlagSet("optional", flag.ExitOnError)
-	optional.BoolVar(&pa.NoClone, "no-clone", false, "Do not clone geth, use existing directory in /tmp")
+	optional.BoolVar(&pa.NoClone, "no-clone", false, "Do not clone geth, use existing directory in /tmp") // change to --force-clone?
 	optional.StringVar(&pa.Unstable, "unstable", "", "Commit hash for unstable version")
 	help := optional.Bool("help", false, "Show command documentation")
 

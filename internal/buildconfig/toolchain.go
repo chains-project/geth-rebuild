@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
 type ToolchainSpec struct {
-	GoVersion string
-	CC        string
-	BuildCmd  string // TODO move ?
+	GoVersion    string
+	Dependencies []string
+	BuildCmd     string
 	//CVersion  string // TODO retrieve (from binary) (script inside docker?)
 }
 
@@ -22,20 +23,20 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 		return tc, fmt.Errorf("failed to get Go version: %w", err)
 	}
 
-	cc, err := getCC(af.Os, af.Arch)
+	deps, err := getToolChainDeps(af)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
 
-	cmd, err := createBuildCommand(af.Arch, cc)
+	cmd, err := getBuildCommand(af, paths.Files.Travis)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
 
 	tc = ToolchainSpec{
-		GoVersion: goVersion,
-		CC:        cc,
-		BuildCmd:  cmd,
+		GoVersion:    goVersion,
+		Dependencies: deps,
+		BuildCmd:     cmd,
 	}
 	return tc, nil
 }
@@ -43,34 +44,71 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
 		"GO_VERSION": tc.GoVersion,
-		"C_COMPILER": tc.CC,
+		"TC_DEPS":    strings.Join(tc.Dependencies, " "),
 		"BUILD_CMD":  tc.BuildCmd,
 		//"CVersion":   t.CVersion,
 	}
 }
 
 func (tc ToolchainSpec) String() string {
-	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, CC:%s, BuildCmd:%s)",
-		tc.GoVersion, tc.CC, tc.BuildCmd)
+	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, Dependencies:%s, BuildCmd:%s)",
+		tc.GoVersion, tc.Dependencies, tc.BuildCmd)
 }
 
 // **
 // HELPERS
 // **
 
-func getArchType(arch string) string {
-	switch arch {
-	case "arm5", "arm6", "arm7":
-		return "arm"
+// Retrieves build command for artifact from travis file
+func getBuildCommand(af ArtifactSpec, travisFile string) (string, error) {
+	switch af.Os {
+	case "linux":
+		return getLinuxBuildCmd(af, travisFile)
 	default:
-		return arch
+		return "", fmt.Errorf("no build command retrievable for unsupported os `%s`", af.Os)
 	}
 }
 
-// Creates the build command based on target architecture and required c compiler
-func createBuildCommand(arch string, cc string) (string, error) {
-	cmd := fmt.Sprintf("go run build/ci.go install -dlgo -arch %s -cc %s", getArchType(arch), cc)
-	return cmd, nil
+// Regexp matches linux build commands for given architecture
+func getLinuxBuildCmd(af ArtifactSpec, travisFile string) (string, error) {
+	switch af.Arch {
+	case "amd64":
+		return "go run build/ci.go install -dlgo", nil
+	case "386", "arm64":
+		pattern := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(af.Arch))
+		return findBuildCmdInFile(pattern, travisFile)
+	case "arm5", "arm6", "arm7":
+		v, err := getArmVersion(af.Os, af.Arch)
+		if err != nil {
+			return "", err
+		}
+		pattern := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(fmt.Sprintf("GOARM=%s", v)))
+		return findBuildCmdInFile(pattern, travisFile)
+	default:
+		return "", fmt.Errorf("no build command found for `%s` arch `%s`", af.Os, af.Arch)
+	}
+}
+
+// Finds build command from travis file for a the given pattern
+func findBuildCmdInFile(pattern string, travisFile string) (string, error) {
+	fileContent, err := os.ReadFile(travisFile)
+	if err != nil {
+		return "", fmt.Errorf("error reading file %s: %v", travisFile, err)
+	}
+
+	re := regexp.MustCompile(pattern)
+	line := re.Find(fileContent)
+	if line == nil {
+		return "", fmt.Errorf("no build command found in file `%s` for pattern `%s`", travisFile, pattern)
+	}
+
+	reCmd := regexp.MustCompile(`go run\s+(.*)`)
+	cmd := reCmd.Find(line)
+
+	if cmd == nil {
+		return "", fmt.Errorf("no build command found in file `%s` from line %s`", travisFile, line)
+	}
+	return string(cmd), nil
 }
 
 // Returns the Go compiler version on form `major.minor.patch` as specified by geth checksumFile.
@@ -97,23 +135,23 @@ func getGoVersion(checksumFile string) (string, error) {
 	return string(match), nil
 }
 
-func getCC(ops string, arch string) (cc string, err error) {
-	switch ops {
-	case "linux": // TODO this is hard coded
-		switch arch {
+// Returns required gcc and libc packages for C cross compilation
+func getToolChainDeps(af ArtifactSpec) ([]string, error) {
+	switch af.Os {
+	case "linux":
+		switch af.Arch {
 		case "amd64", "386":
-			cc = "gcc-multilib"
+			return []string{"gcc-multilib"}, nil
 		case "arm64":
-			cc = "gcc-aarch64-linux-gnu"
+			return []string{"libc6-dev-arm64-cross", "gcc-aarch64-linux-gnu"}, nil // TODO hard coded - can use regex ?
 		case "arm5", "arm6":
-			cc = "gcc-arm-linux-gnueabi"
+			return []string{"libc6-dev-armel-cross", "gcc-arm-linux-gnueabi"}, nil
 		case "arm7":
-			cc = "gcc-arm-linux-gnueabihf"
+			return []string{"libc6-dev-armhf-cross", "gcc-arm-linux-gnueabihf"}, nil
 		default:
-			err = fmt.Errorf("no C compiler found for linux arch `%s`", arch)
+			return nil, fmt.Errorf("no packages found for linux arch `%s`", af.Arch)
 		}
 	default:
-		err = fmt.Errorf("no C compiler found for os `%s`", ops)
+		return nil, fmt.Errorf("no packages found for os `%s`", af.Os)
 	}
-	return
 }

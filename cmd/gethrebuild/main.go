@@ -5,6 +5,7 @@ import (
 	"log"
 
 	config "github.com/chains-project/geth-rebuild/internal/buildconfig"
+	"github.com/chains-project/geth-rebuild/internal/rebuild"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -56,22 +57,19 @@ func main() {
 	bi := config.NewBuildInput(af, tc, env, paths)
 	fmt.Println(bi)
 
-	// err = utils.StartDocker(paths)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = utils.StartDocker(paths)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// err = rebuild.RunDockerBuild(bi)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = rebuild.RunDockerBuild(bi)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// _, err = rebuild.CompareBinaries(bi.DockerTag, paths)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // TODO organise into functions. Alternatively: put scripts into docker.
-	// binRef := filepath.Join(paths.Directories.Bin, "geth-reference")
-	// binRep := filepath.Join(paths.Directories.Bin, "geth-reproduce")
-	// utils.RunCommand(paths.Scripts.CompareBinaries, binRef, binRep)
+	_, err = rebuild.CompareBinaries(bi.DockerTag, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
+	utils.RunCommand(paths.Scripts.CompareBinaries, paths.Files.ReferenceBin, paths.Files.RebuildBin)
 }
