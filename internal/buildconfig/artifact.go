@@ -2,6 +2,7 @@ package buildconfig
 
 import (
 	"fmt"
+	"os"
 
 	utils "github.com/chains-project/geth-rebuild/internal/utils"
 )
@@ -33,7 +34,7 @@ func (a ArtifactSpec) String() string {
 }
 
 // Returns configured Artifact Specification
-func NewArtifactSpec(pa *ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
+func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
 	if pa.GethDir == "" {
 		err := cloneGethRepo(paths)
 		if err != nil {
@@ -75,11 +76,25 @@ func NewArtifactSpec(pa *ProgramArgs, paths utils.Paths) (af ArtifactSpec, err e
 // HELPERS
 // **
 
-// Runs clone script as specified in paths struct
+// Clones geth into /tmp, removes any existing geth directory
 func cloneGethRepo(paths utils.Paths) error {
-	_, err := utils.RunCommand(paths.Scripts.Clone, paths.Directories.Temp)
+	url := "https://github.com/ethereum/go-ethereum.git"
+	branch := "master"
+	fmt.Printf("\nCloning go ethereum branch %s from %s\n\n", branch, url)
+
+	_, err := utils.RunCommand("mkdir", "-p", paths.Directories.Temp)
 	if err != nil {
 		return err
+	}
+	if _, err := os.Stat(paths.Directories.Geth); !os.IsNotExist(err) {
+		_, err := utils.RunCommand("rm", "-rf", paths.Directories.Geth)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = utils.RunCommand("git", "clone", "-v", "--branch", branch, url, paths.Directories.Geth)
+	if err != nil {
+		return fmt.Errorf("failed to clone geth sources: %w", err)
 	}
 	return nil
 }

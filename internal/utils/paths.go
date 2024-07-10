@@ -52,7 +52,6 @@ func SetUpPaths() Paths {
 			Checksums: filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
 		},
 		Scripts: Scripts{
-			Clone:           filepath.Join(rootDir, "internal", "scripts", "clone.sh"),
 			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
 			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
 			CopyBinaries:    filepath.Join(rootDir, "internal", "scripts", "copy_bin.sh"),
