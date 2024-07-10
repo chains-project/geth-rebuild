@@ -35,7 +35,7 @@ func (a ArtifactSpec) String() string {
 
 // Returns configured Artifact Specification
 func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
-	if pa.GethDir == "" {
+	if !pa.NoClone {
 		err := cloneGethRepo(paths)
 		if err != nil {
 			return af, err

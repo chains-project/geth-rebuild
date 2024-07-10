@@ -12,7 +12,6 @@ var paths utils.Paths = utils.SetUpPaths()
 func init() {
 	// set up scripts
 	scripts := []string{
-		paths.Scripts.Clone,
 		paths.Scripts.Checkout,
 		paths.Scripts.StartDocker,
 		paths.Scripts.CopyBinaries,
@@ -22,35 +21,31 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func main() {
-	pa, err := buildconfig.ParseArgs()
+	pa, err := utils.ParseArgs()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = buildconfig.ValidateInput(pa)
+	err = utils.ValidArgs(pa)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if pa.GethDir != "" {
-		paths.Directories.Geth = pa.GethDir
-	}
 
 	// // artifact specification
-	_, err = buildconfig.NewArtifactSpec(pa, paths)
+	af, err := buildconfig.NewArtifactSpec(pa, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// // toolchain specification
-	// tc, err := config.NewToolchainSpec(af, paths)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	// toolchain specification
+	_, err = buildconfig.NewToolchainSpec(af, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// // ubuntu specification
 	// de, err := config.NewDockerSpec(af, paths)
