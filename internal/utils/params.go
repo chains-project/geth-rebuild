@@ -1,4 +1,4 @@
-package buildconfig
+package utils
 
 import (
 	"flag"
@@ -32,7 +32,6 @@ const (
 var allowedArch = map[OS][]Arch{
 	Linux: {AMD64, ARM64, ARM5, ARM6, ARM7, A386},
 }
-
 
 // Program Args holds parsed input arguments to main program
 type ProgramArgs struct {
@@ -69,7 +68,13 @@ func ParseArgs() (*ProgramArgs, error) {
 	optional := flag.NewFlagSet("optional", flag.ExitOnError)
 	optional.StringVar(&pa.GethDir, "geth-dir", "", "Path to the geth directory")
 	optional.StringVar(&pa.Unstable, "unstable", "", "Commit hash for unstable version")
+	help := optional.Bool("help", false, "Show command documentation")
 	optional.Parse(os.Args[4:])
+
+	if *help == true {
+		usage()
+		os.Exit(1)
+	}
 
 	return pa, nil
 }
