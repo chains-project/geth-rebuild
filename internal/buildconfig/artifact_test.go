@@ -1,31 +1,65 @@
 package buildconfig
 
 import (
-	"reflect"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-func TestArtifactSpec_ToMap(t *testing.T) {
+var p = utils.SetUpPaths()
+
+func TestGethRepoExists(t *testing.T) {
+	existingDir := filepath.Join(p.Directories.Root, "tmp", "existing-directory")
 	tests := []struct {
-		af   ArtifactSpec
-		want map[string]string
+		paths    utils.Paths
+		want     bool
+		wantErr  bool
+		testName string
 	}{
 		{
-			ArtifactSpec{"1.10.8", "linux", "amd64", "abcdef1234567890", "abcdef12"},
-			map[string]string{
-				"GETH_VERSION": "1.10.8",
-				"OS":           "linux",
-				"ARCH":         "amd64",
-				"COMMIT":       "abcdef1234567890",
-				"SHORT_COMMIT": "abcdef12",
+			paths: utils.Paths{
+				Directories: utils.Directories{
+					Geth: existingDir,
+				},
 			},
+			want:     true,
+			wantErr:  false,
+			testName: "Existing directory",
+		},
+		{
+			paths: utils.Paths{
+				Directories: utils.Directories{
+					Geth: filepath.Join(p.Directories.Root, "tmp", "non-existing-directory"),
+				},
+			},
+			want:     false,
+			wantErr:  false,
+			testName: "Non-existing directory",
 		},
 	}
 
+	err := os.MkdirAll(existingDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create directory %s: %v", existingDir, err)
+	}
+
 	for _, tt := range tests {
-		got := tt.af.ToMap()
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("ArtifactSpec.ToMap() = %v, want %v", got, tt.want)
-		}
+		t.Run(tt.testName, func(t *testing.T) {
+			exists, err := gethRepoExists(tt.paths)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("gethRepoExists() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if exists != tt.want {
+				t.Errorf("gethRepoExists() = %v, want %v", exists, tt.want)
+			}
+		})
+	}
+	err = os.RemoveAll(existingDir)
+	if err != nil {
+		t.Errorf("gethRepoExists() error removing dir `%s`: %v", existingDir, err)
+		return
 	}
 }
