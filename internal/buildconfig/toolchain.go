@@ -13,7 +13,6 @@ type ToolchainSpec struct {
 	GCVersion    string
 	BuildCmd     string
 	Dependencies []string
-	//CVersion  string // TODO retrieve (from binary) (script inside docker?)
 }
 
 // Returns configured rebuild Toolchain specification
@@ -28,7 +27,7 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
 
-	cmd, err := getBuildCommand(af, paths.Files.Travis)
+	cmd, err := getBuildCommand(af.GOOS, af.GOARCH, paths.Files.Travis)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
@@ -60,54 +59,54 @@ func (tc ToolchainSpec) String() string {
 // **
 
 // Retrieves build command for artifact from travis file
-func getBuildCommand(af ArtifactSpec, travisFile string) (string, error) {
-	switch af.GOOS {
+func getBuildCommand(ops utils.OS, arch utils.Arch, travisYML string) (string, error) {
+	switch ops {
 	case utils.Linux:
-		return getLinuxBuildCmd(af, travisFile)
+		return getLinuxBuildCmd(ops, arch, travisYML)
 	default:
-		return "", fmt.Errorf("no build command retrievable for unsupported os `%s`", string(af.GOOS))
+		return "", fmt.Errorf("no build command retrievable for unsupported os `%s`", ops)
 	}
 }
 
 // Regexp matches linux build commands for given architecture
-func getLinuxBuildCmd(af ArtifactSpec, travisFile string) (string, error) {
+func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, error) {
 	var pattern string
 
-	switch af.GOARCH {
+	switch arch {
 	case utils.AMD64:
 		return "go run build/ci.go install -dlgo", nil
 	case utils.A386, utils.ARM64:
-		pattern = fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(string(af.GOARCH)))
+		pattern = fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(string(arch)))
 	case utils.ARM5, utils.ARM6, utils.ARM7:
-		v, err := getArmVersion(af.GOOS, af.GOARCH)
+		v, err := getArmVersion(ops, arch)
 		if err != nil {
 			return "", err
 		}
 		pattern = fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(fmt.Sprintf("GOARM=%s", v)))
 	default:
-		return "", fmt.Errorf("no build command found for `%s` arch `%s`", af.GOOS, af.GOARCH)
+		return "", fmt.Errorf("no build command found for `%s` arch `%s`", ops, arch)
 	}
-	return findBuildCmdInFile(pattern, travisFile)
+	return findBuildCmdInFile(pattern, travisYML)
 }
 
 // Finds build command from travis file for a the given pattern
-func findBuildCmdInFile(pattern string, travisFile string) (string, error) {
-	fileContent, err := os.ReadFile(travisFile)
+func findBuildCmdInFile(pattern string, travisYML string) (string, error) {
+	fileContent, err := os.ReadFile(travisYML)
 	if err != nil {
-		return "", fmt.Errorf("error reading file %s: %v", travisFile, err)
+		return "", fmt.Errorf("error reading file %s: %v", travisYML, err)
 	}
 
 	re := regexp.MustCompile(pattern)
 	line := re.Find(fileContent)
 	if line == nil {
-		return "", fmt.Errorf("no build command found in file `%s` for pattern `%s`", travisFile, pattern)
+		return "", fmt.Errorf("no build command found in file `%s` for pattern `%s`", travisYML, pattern)
 	}
 
 	reCmd := regexp.MustCompile(`go run\s+(.*)`)
 	cmd := reCmd.Find(line)
 
 	if cmd == nil {
-		return "", fmt.Errorf("no build command found in file `%s` from line %s`", travisFile, line)
+		return "", fmt.Errorf("no build command found in file `%s` from line %s`", travisYML, line)
 	}
 	return string(cmd), nil
 }
@@ -119,7 +118,7 @@ func getGCVersion(checksumFile string) (string, error) {
 		return "", fmt.Errorf("error reading file %s: %v", checksumFile, err)
 	}
 
-	reTar := regexp.MustCompile(`go(\d+.\d+.(\d+)?).src.tar.gz`)
+	reTar := regexp.MustCompile(`go(\d+.\d+.(\d+)?).src.tar.gz`) // TODO this matches also ppa-builder version
 	goTar := reTar.Find(fileContent)
 
 	if goTar == nil {

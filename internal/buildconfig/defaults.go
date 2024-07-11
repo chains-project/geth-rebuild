@@ -32,7 +32,7 @@ var DefaultConfig = DefaultConfigs{
 	},
 	ArmVersions: map[utils.OS]map[utils.Arch]string{
 		utils.Linux: {
-			utils.AMD64: "",
+			utils.AMD64: "", // empty goarm value sets empty flag in docker build `GOARM=`
 			utils.A386:  "",
 			utils.ARM64: "", // no ARM flag optimisation for aarch64
 			utils.ARM5:  "5",

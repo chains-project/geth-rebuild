@@ -60,18 +60,18 @@ func (ub EnvSpec) String() string {
 // HELPERS
 // **
 
-// Retrieves Ubuntu distribution as defined in `travisFile` (dist : dddd)
-func getUbuntuDist(travisFile string) (dist string, err error) { // TODO this logic does not work due to travis ci issue
-	fileContent, err := os.ReadFile(travisFile)
+// Retrieves Ubuntu distribution as defined in travis yaml file (dist : dddd)
+func getUbuntuDist(travisYML string) (dist string, err error) { // TODO this logic does not work due to travis ci issue
+	fileContent, err := os.ReadFile(travisYML)
 	if err != nil {
-		return "", fmt.Errorf("error reading file %s: %v", travisFile, err)
+		return "", fmt.Errorf("error reading file %s: %v", travisYML, err)
 	}
 
 	re := regexp.MustCompile(`dist:\s*([a-z]+)`)
 	distDefinition := re.Find(fileContent)
 
 	if distDefinition == nil {
-		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisFile)
+		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisYML)
 	}
 	dist = strings.Split(string(distDefinition), ": ")[1]
 	return dist, nil

@@ -1,0 +1,14 @@
+# This builder does the Linux Azure uploads
+- stage: build
+  if: type = push
+  os: linux
+  sudo: required
+  go: 1.22.x
+  env:
+    - azure-linux
+  git:
+    submodules: false # avoid cloning ethereum/tests
+  script:
+    # build amd64
+    - go run build/ci.go install -dlgo
+    - go run build/ci.go archive -type tar -signer LINUX_SIGNING_KEY -signify SIGNIFY_KEY -upload gethstore/builds
