@@ -33,14 +33,19 @@ func (af ArtifactSpec) String() string {
 
 // Returns configured rebuild Artifact Specification
 func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
-	if !pa.NoClone {
+	var commit string
+
+	exists, err := gethRepoExists(paths)
+	if err != nil {
+		return af, err
+	}
+
+	if !exists || pa.ForceClone {
 		err := cloneGethRepo(paths)
 		if err != nil {
 			return af, err
 		}
 	}
-
-	var commit string
 
 	if pa.Unstable == "" { // stable release, check out version tag
 		err = checkoutGeth(pa.GethVersion, paths)
@@ -75,22 +80,44 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 // HELPERS
 // **
 
+// Indicates if directory /tmp/go-ethereum exists
+func gethRepoExists(paths utils.Paths) (bool, error) {
+	_, err := os.Stat(paths.Directories.Geth)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 // Clones geth into /tmp, removes any existing geth directory
 func cloneGethRepo(paths utils.Paths) error {
 	url := "https://github.com/ethereum/go-ethereum.git"
 	branch := "master"
 	fmt.Printf("\nCloning go ethereum branch %s from %s\n\n", branch, url)
 
+	// create /tmp if not existing
 	_, err := utils.RunCommand("mkdir", "-p", paths.Directories.Temp)
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(paths.Directories.Geth); !os.IsNotExist(err) {
+
+	// remove any existing repo
+	exists, err := gethRepoExists(paths)
+	if err != nil {
+		return err
+	}
+
+	if exists {
 		_, err := utils.RunCommand("rm", "-rf", paths.Directories.Geth)
 		if err != nil {
 			return err
 		}
 	}
+
+	// clone
 	_, err = utils.RunCommand("git", "clone", "-v", "--branch", branch, url, paths.Directories.Geth)
 	if err != nil {
 		return fmt.Errorf("failed to clone geth sources: %w", err)

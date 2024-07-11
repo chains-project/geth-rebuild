@@ -38,7 +38,7 @@ type ProgramArgs struct {
 	GOOS        OS
 	GOARCH      Arch
 	GethVersion string
-	NoClone     bool
+	ForceClone  bool
 	Unstable    string
 }
 
@@ -47,9 +47,9 @@ func init() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s <os> <arch> <version> [--geth-dir <geth directory>] [--unstable <commit hash>]\nExample: %s linux amd64 1.14.3\n\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
+	fmt.Fprintf(os.Stderr, "Usage: %s <os> <arch> <version> [--force-clone] [--unstable <commit hash>]\nExample: %s linux amd64 1.14.3\n\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
 	flag.PrintDefaults()
-	fmt.Fprintln(os.Stderr, "Reproduce a geth linux binary release")
+	fmt.Fprintln(os.Stderr, "Reproduce a geth linux binary release\nUse --help for command documentation")
 }
 
 func ParseArgs() (*ProgramArgs, error) {
@@ -66,8 +66,8 @@ func ParseArgs() (*ProgramArgs, error) {
 
 	// parse optional flags into ProgramArgs struct
 	optional := flag.NewFlagSet("optional", flag.ExitOnError)
-	optional.BoolVar(&pa.NoClone, "no-clone", false, "Do not clone geth, use existing directory in /tmp") // change to --force-clone?
-	optional.StringVar(&pa.Unstable, "unstable", "", "Commit hash for unstable version")
+	optional.BoolVar(&pa.ForceClone, "force-clone", false, "Forces a new clone of geth repository and removes any existing geth repo in /tmp")
+	optional.StringVar(&pa.Unstable, "unstable", "", "Rebuilds an unstable build specified by given commit hash and version")
 	help := optional.Bool("help", false, "Show command documentation")
 
 	optional.Parse(os.Args[4:])
