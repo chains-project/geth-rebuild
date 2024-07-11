@@ -24,7 +24,7 @@ var DefaultConfig = DefaultConfigs{
 		utils.Linux: {
 			utils.AMD64: "elf64-x86-64",
 			utils.A386:  "elf32-i386",
-			utils.ARM64: "elf64-littleaarch64",
+			utils.ARM64: "elf64-little",
 			utils.ARM5:  "elf32-little",
 			utils.ARM6:  "elf32-little",
 			utils.ARM7:  "elf32-little",
