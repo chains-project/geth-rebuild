@@ -99,7 +99,7 @@ func cloneGethRepo(paths utils.Paths) error {
 	fmt.Printf("\nCloning go ethereum branch %s from %s\n\n", branch, url)
 
 	// create /tmp if not existing
-	_, err := utils.RunCommand("mkdir", "-p", paths.Directories.Temp)
+	err := os.MkdirAll(paths.Directories.Temp, 0755)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func cloneGethRepo(paths utils.Paths) error {
 	}
 
 	if exists {
-		_, err := utils.RunCommand("rm", "-rf", paths.Directories.Geth)
+		err = os.RemoveAll(paths.Directories.Geth)
 		if err != nil {
 			return err
 		}
