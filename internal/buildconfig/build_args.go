@@ -26,7 +26,7 @@ func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, de EnvSpec, paths utils.Pa
 		Artifact:  af,
 		Toolchain: tc,
 		DockerEnv: de,
-		DockerTag: createDockerTag(af.Version, af.Os, af.Arch),
+		DockerTag: createDockerTag(af.Version, string(af.GOOS), string(af.GOARCH)),
 		DockerDir: paths.Directories.Docker,
 	}
 }

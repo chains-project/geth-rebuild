@@ -10,20 +10,20 @@ import (
 )
 
 type ToolchainSpec struct {
-	GoVersion    string
-	Dependencies []string
+	GCVersion    string
 	BuildCmd     string
+	Dependencies []string
 	//CVersion  string // TODO retrieve (from binary) (script inside docker?)
 }
 
 // Returns configured rebuild Toolchain specification
 func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err error) {
-	goVersion, err := getGoVersion(paths.Files.Checksums)
+	goVersion, err := getGCVersion(paths.Files.Checksums)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get Go version: %w", err)
 	}
 
-	deps, err := getToolChainDeps(af)
+	deps, err := getToolChainDeps(af.GOOS, af.GOARCH)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
@@ -34,7 +34,7 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 	}
 
 	tc = ToolchainSpec{
-		GoVersion:    goVersion,
+		GCVersion:    goVersion,
 		Dependencies: deps,
 		BuildCmd:     cmd,
 	}
@@ -43,7 +43,7 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 
 func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GO_VERSION": tc.GoVersion,
+		"GO_VERSION": tc.GCVersion,
 		"TC_DEPS":    strings.Join(tc.Dependencies, " "),
 		"BUILD_CMD":  tc.BuildCmd,
 		//"CVersion":   t.CVersion,
@@ -52,7 +52,7 @@ func (tc ToolchainSpec) ToMap() map[string]string {
 
 func (tc ToolchainSpec) String() string {
 	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, Dependencies:%s, BuildCmd:%s)",
-		tc.GoVersion, tc.Dependencies, tc.BuildCmd)
+		tc.GCVersion, tc.Dependencies, tc.BuildCmd)
 }
 
 // **
@@ -61,32 +61,33 @@ func (tc ToolchainSpec) String() string {
 
 // Retrieves build command for artifact from travis file
 func getBuildCommand(af ArtifactSpec, travisFile string) (string, error) {
-	switch af.Os {
-	case "linux":
+	switch af.GOOS {
+	case utils.Linux:
 		return getLinuxBuildCmd(af, travisFile)
 	default:
-		return "", fmt.Errorf("no build command retrievable for unsupported os `%s`", af.Os)
+		return "", fmt.Errorf("no build command retrievable for unsupported os `%s`", string(af.GOOS))
 	}
 }
 
 // Regexp matches linux build commands for given architecture
 func getLinuxBuildCmd(af ArtifactSpec, travisFile string) (string, error) {
-	switch af.Arch {
-	case "amd64":
+	var pattern string
+
+	switch af.GOARCH {
+	case utils.AMD64:
 		return "go run build/ci.go install -dlgo", nil
-	case "386", "arm64":
-		pattern := fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(af.Arch))
-		return findBuildCmdInFile(pattern, travisFile)
-	case "arm5", "arm6", "arm7":
-		v, err := getArmVersion(af.Os, af.Arch)
+	case utils.A386, utils.ARM64:
+		pattern = fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(string(af.GOARCH)))
+	case utils.ARM5, utils.ARM6, utils.ARM7:
+		v, err := getArmVersion(af.GOOS, af.GOARCH)
 		if err != nil {
 			return "", err
 		}
-		pattern := fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(fmt.Sprintf("GOARM=%s", v)))
-		return findBuildCmdInFile(pattern, travisFile)
+		pattern = fmt.Sprintf(`%s.go\s*run\s*build/ci\.go\s*install.*`, regexp.QuoteMeta(fmt.Sprintf("GOARM=%s", v)))
 	default:
-		return "", fmt.Errorf("no build command found for `%s` arch `%s`", af.Os, af.Arch)
+		return "", fmt.Errorf("no build command found for `%s` arch `%s`", af.GOOS, af.GOARCH)
 	}
+	return findBuildCmdInFile(pattern, travisFile)
 }
 
 // Finds build command from travis file for a the given pattern
@@ -111,8 +112,8 @@ func findBuildCmdInFile(pattern string, travisFile string) (string, error) {
 	return string(cmd), nil
 }
 
-// Returns the Go compiler version on form `major.minor.patch` as specified by geth checksumFile.
-func getGoVersion(checksumFile string) (string, error) {
+// Returns the Go `gc` compiler version on form `major.minor.patch` as specified by geth checksum file
+func getGCVersion(checksumFile string) (string, error) {
 	fileContent, err := os.ReadFile(checksumFile)
 	if err != nil {
 		return "", fmt.Errorf("error reading file %s: %v", checksumFile, err)
@@ -136,22 +137,11 @@ func getGoVersion(checksumFile string) (string, error) {
 }
 
 // Returns required gcc and libc packages for C cross compilation
-func getToolChainDeps(af ArtifactSpec) ([]string, error) {
-	switch af.Os {
-	case "linux":
-		switch af.Arch {
-		case "amd64", "386":
-			return []string{"gcc-multilib"}, nil
-		case "arm64":
-			return []string{"libc6-dev-arm64-cross", "gcc-aarch64-linux-gnu"}, nil // TODO hard coded - can use regex ?
-		case "arm5", "arm6":
-			return []string{"libc6-dev-armel-cross", "gcc-arm-linux-gnueabi"}, nil
-		case "arm7":
-			return []string{"libc6-dev-armhf-cross", "gcc-arm-linux-gnueabihf"}, nil
-		default:
-			return nil, fmt.Errorf("no packages found for linux arch `%s`", af.Arch)
+func getToolChainDeps(ops utils.OS, arch utils.Arch) ([]string, error) {
+	if archDeps, ok := DefaultConfig.ToolchainDeps[ops]; ok {
+		if deps, ok := archDeps[arch]; ok {
+			return deps, nil
 		}
-	default:
-		return nil, fmt.Errorf("no packages found for os `%s`", af.Os)
 	}
+	return nil, fmt.Errorf("no toolchain dependencies found for `%s` `%s`", ops, arch)
 }

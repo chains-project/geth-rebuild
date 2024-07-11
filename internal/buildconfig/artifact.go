@@ -9,26 +9,26 @@ import (
 
 // specifies information about the artifact to rebuild
 type ArtifactSpec struct {
+	GOOS        utils.OS
+	GOARCH      utils.Arch
 	Version     string
-	Os          string
-	Arch        string
 	Commit      string
 	ShortCommit string
 }
 
 func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
+		"OS":           string(af.GOOS),
+		"ARCH":         string(af.GOARCH),
 		"GETH_VERSION": af.Version,
-		"OS":           af.Os,
-		"ARCH":         af.Arch,
 		"COMMIT":       af.Commit,
 		"SHORT_COMMIT": af.ShortCommit,
 	}
 }
 
 func (af ArtifactSpec) String() string {
-	return fmt.Sprintf("ArtifactSpec: (Version:%s, Os:%s, Arch:%s, Commit:%s, ShortCommit:%s)",
-		af.Version, af.Os, af.Arch, af.Commit, af.ShortCommit)
+	return fmt.Sprintf("ArtifactSpec: (Version:%s, GOOS:%s, GOARCH:%s, Commit:%s, ShortCommit:%s)",
+		af.Version, af.GOOS, af.GOARCH, af.Commit, af.ShortCommit)
 }
 
 // Returns configured rebuild Artifact Specification
@@ -41,7 +41,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 	}
 
 	var commit string
-	
+
 	if pa.Unstable == "" { // stable release, check out version tag
 		err = checkoutGeth(pa.GethVersion, paths)
 		if err != nil {
@@ -62,8 +62,8 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 
 	af = ArtifactSpec{
 		Version:     pa.GethVersion,
-		Os:          string(pa.GOOS),
-		Arch:        string(pa.GOARCH),
+		GOOS:        pa.GOOS,
+		GOARCH:      pa.GOARCH,
 		Commit:      commit,
 		ShortCommit: commit[0:8],
 	}
