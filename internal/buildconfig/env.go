@@ -2,8 +2,6 @@ package buildconfig
 
 import (
 	"fmt"
-	"os"
-	"regexp"
 	"strings"
 
 	"github.com/chains-project/geth-rebuild/internal/utils"
@@ -18,7 +16,7 @@ type EnvSpec struct {
 
 // Returns configured rebuild Environment specification
 func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (ub EnvSpec, err error) {
-	dist, err := getUbuntuDist(paths.Files.Travis) // TODO !!!
+	dist, err := getUbuntuDist(af.Version)
 	if err != nil {
 		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
 	}
@@ -28,7 +26,7 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (ub EnvSpec, err error) {
 		return ub, fmt.Errorf("failed to get ELF target: %w", err)
 	}
 
-	armV, err := getArmVersion(af.GOOS, af.GOARCH)
+	armV, err := getArmVersion(af.GOOS, af.GOARCH) // TODO change to optional
 	if err != nil {
 		return ub, fmt.Errorf("failed to get arm version: %w", err)
 	}
@@ -46,8 +44,8 @@ func (ub EnvSpec) ToMap() map[string]string {
 	return map[string]string{
 		"UBUNTU_DIST": ub.UbuntuDist,
 		"ELF_TARGET":  ub.ElfTarget,
-		"GOARM":       ub.ArmVersion,
-		"UB_DEPS":     strings.Join(ub.Dependencies, " "),
+		//"GOARM":       ub.ArmVersion, // TODO fix optional flags to avoid arm issue for non arm builds
+		"UB_DEPS": strings.Join(ub.Dependencies, " "),
 	}
 }
 
@@ -56,27 +54,23 @@ func (ub EnvSpec) String() string {
 		ub.UbuntuDist, ub.ElfTarget, ub.Dependencies, ub.ArmVersion)
 }
 
-// **
-// HELPERS
-// **
-
 // Retrieves Ubuntu distribution as defined in travis yaml file (dist : dddd)
-func getUbuntuDist(travisYML string) (dist string, err error) { // TODO this logic does not work due to travis ci issue
-	fileContent, err := os.ReadFile(travisYML)
-	if err != nil {
-		return "", fmt.Errorf("error reading file %s: %v", travisYML, err)
-	}
+// func getUbuntuDist(travisYML string) (dist string, err error) {
+// 	fileContent, err := os.ReadFile(travisYML)
+// 	if err != nil {
+// 		return "", fmt.Errorf("error reading file %s: %v", travisYML, err)
+// 	}
 
-	re := regexp.MustCompile(`dist:\s*([a-z]+)`)
-	distDefinition := re.Find(fileContent)
+// 	re := regexp.MustCompile(`dist:\s*([a-z]+)`)
+// 	distDefinition := re.Find(fileContent)
 
-	if distDefinition == nil {
-		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisYML)
-	}
-	dist = strings.Split(string(distDefinition), ": ")[1]
-	return dist, nil
+// 	if distDefinition == nil {
+// 		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisYML)
+// 	}
+// 	dist = strings.Split(string(distDefinition), ": ")[1]
+// 	return dist, nil
 
-}
+// }
 
 func getElfTarget(ops utils.OS, arch utils.Arch) (string, error) {
 	if targets, ok := DefaultConfig.ElfTargets[ops]; ok {

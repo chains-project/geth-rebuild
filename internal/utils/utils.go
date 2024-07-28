@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -73,7 +74,7 @@ func GetGitCommit(dir string) (string, error) {
 	if commit == "" {
 		return "", fmt.Errorf("no commit found in dir %s", dir)
 	}
-	
+
 	commit = strings.ReplaceAll(commit, "\n", "")
 	return commit, nil
 }
@@ -89,11 +90,42 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-
+// Runs a script that starts Docker // TODO: works on ubuntu???
 func StartDocker(paths Paths) error {
 	_, err := RunCommand(paths.Scripts.StartDocker)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// Performs an HTTP GET request and returns the response body as a string
+func HttpGetRequest(url string, headers map[string]string) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error: received status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }
