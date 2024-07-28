@@ -6,7 +6,8 @@ FROM ubuntu:${UBUNTU_DIST} as builder
 ARG GETH_SRC_DIR="./tmp/go-ethereum"
 # artifact spec
 ARG GETH_VERSION=""
-ARG OS="" 
+ARG GOOS="" 
+ARG GOARCH=""
 ARG ARCH=""
 ARG GETH_COMMIT=""
 ARG SHORT_COMMIT=""
@@ -18,7 +19,10 @@ ARG TC_DEPS=""
 ARG UB_DEPS=""
 ARG ELF_TARGET=""
 ARG GOARM=""
+ARG CC=""
+
 ENV CGO_ENABLED=1
+ENV PATH=/usr/local:/usr/bin:$PATH
 
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
     ${UB_DEPS} \
@@ -33,7 +37,7 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
 ENV PATH=$PATH:/usr/local/go/bin
 
 # Fetch reference binary and strip symbols + build ids
-ENV BIN_DIR="geth-${OS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
+ENV BIN_DIR="geth-${GOOS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
 ENV REF_URL="https://gethstore.blob.core.windows.net/builds/${TAR_DIR}"
 ENV REFERENCE_DEST=/bin/geth-reference
@@ -51,7 +55,7 @@ ENV GETH_DEST_DIR=/go-ethereum
 COPY ${GETH_SRC_DIR} ${GETH_DEST_DIR} 
 
 RUN cd ${GETH_DEST_DIR} && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
-    $BUILD_CMD ./cmd/geth
+    ${BUILD_CMD}./cmd/geth
 
 RUN cd ${GETH_DEST_DIR}/build/bin && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \

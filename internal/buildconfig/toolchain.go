@@ -13,6 +13,7 @@ type ToolchainSpec struct {
 	GCVersion    string
 	BuildCmd     string
 	Dependencies []string
+	CC           string
 }
 
 // Returns configured rebuild Toolchain specification
@@ -32,10 +33,16 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
 
+	cc, err := getCC(af.GOOS, af.GOARCH)
+	if err != nil {
+		return tc, fmt.Errorf("failed to get c compiler: %w", err)
+	}
+
 	tc = ToolchainSpec{
 		GCVersion:    goVersion,
 		Dependencies: deps,
 		BuildCmd:     cmd,
+		CC:           cc,
 	}
 	return tc, nil
 }
@@ -45,7 +52,7 @@ func (tc ToolchainSpec) ToMap() map[string]string {
 		"GO_VERSION": tc.GCVersion,
 		"TC_DEPS":    strings.Join(tc.Dependencies, " "),
 		"BUILD_CMD":  tc.BuildCmd,
-		//"CVersion":   t.CVersion,
+		"CC":         tc.CC,
 	}
 }
 
@@ -53,10 +60,6 @@ func (tc ToolchainSpec) String() string {
 	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, Dependencies:%s, BuildCmd:%s)",
 		tc.GCVersion, tc.Dependencies, tc.BuildCmd)
 }
-
-// **
-// HELPERS
-// **
 
 // Retrieves build command for artifact from travis file
 func getBuildCommand(ops utils.OS, arch utils.Arch, travisYML string) (string, error) {
@@ -143,4 +146,14 @@ func getToolChainDeps(ops utils.OS, arch utils.Arch) ([]string, error) {
 		}
 	}
 	return nil, fmt.Errorf("no toolchain dependencies found for `%s` `%s`", ops, arch)
+}
+
+// Returns gcc compiler
+func getCC(ops utils.OS, arch utils.Arch) (string, error) {
+	if archCCs, ok := DefaultConfig.CC[ops]; ok {
+		if cc, ok := archCCs[arch]; ok {
+			return cc, nil
+		}
+	}
+	return "", fmt.Errorf("no toolchain dependencies found for `%s` `%s`", ops, arch)
 }

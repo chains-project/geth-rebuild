@@ -18,8 +18,9 @@ type ArtifactSpec struct {
 
 func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
-		"OS":           string(af.GOOS),
+		"GOOS":         string(af.GOOS),
 		"ARCH":         string(af.GOARCH),
+		"GOARCH":       "arm",
 		"GETH_VERSION": af.Version,
 		"COMMIT":       af.Commit,
 		"SHORT_COMMIT": af.ShortCommit,
@@ -75,10 +76,6 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 
 	return af, nil
 }
-
-// **
-// HELPERS
-// **
 
 // Indicates if directory /tmp/go-ethereum exists
 func gethRepoExists(paths utils.Paths) (bool, error) {

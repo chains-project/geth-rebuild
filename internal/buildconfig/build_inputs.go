@@ -40,7 +40,7 @@ func (bi BuildInput) String() string {
 	return str
 }
 
-// Gathers all build args into a string -> string map
+// Gathers all build args into a string to string map
 func (bi BuildInput) GetBuildArgs() map[string]string {
 	buildArgs := make(map[string]string)
 
@@ -57,7 +57,7 @@ func (bi BuildInput) GetBuildArgs() map[string]string {
 	return buildArgs
 }
 
-// Returns a tag to identify a Docker image build
+// Creates a timestamped tag for a Docker build
 func createDockerTag(version string, ops string, arch string) string {
 	now := time.Now()
 	timestamp := now.Format("2006-01-02-15:04")
