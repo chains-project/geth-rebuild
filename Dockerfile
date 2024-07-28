@@ -60,7 +60,7 @@ ENV GETH_DEST_DIR=/go-ethereum
 COPY ${GETH_SRC_DIR} ${GETH_DEST_DIR} 
 
 RUN cd ${GETH_DEST_DIR} && git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
-    ${BUILD_CMD}./cmd/geth
+    ${BUILD_CMD} ./cmd/geth
 
 RUN cd ${GETH_DEST_DIR}/build/bin && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
