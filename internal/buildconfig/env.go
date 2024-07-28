@@ -77,7 +77,7 @@ func getArmVersion(ops utils.OS, arch utils.Arch) (string, error) {
 func newFlagSpec(af ArtifactSpec) (FlagSpec, error) {
 	goArch := string(af.Arch)
 
-	if strings.Contains("arm", goArch) && len(goArch) == 4 { // exclude arm64 from this rule
+	if strings.Contains(goArch, "arm") && len(goArch) == 4 { // exclude arm64 from this rule
 		goArch = "arm" // strip version number
 	}
 
