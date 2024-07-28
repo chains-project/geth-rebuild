@@ -23,17 +23,17 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 		return tc, fmt.Errorf("failed to get Go version: %w", err)
 	}
 
-	deps, err := getToolChainDeps(af.GOOS, af.GOARCH)
+	deps, err := getToolChainDeps(af.OS, af.Arch)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get C compiler: %w", err)
 	}
 
-	cmd, err := getBuildCommand(af.GOOS, af.GOARCH, paths.Files.Travis)
+	cmd, err := getBuildCommand(af.OS, af.Arch, paths.Files.Travis)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
 
-	cc, err := getCC(af.GOOS, af.GOARCH)
+	cc, err := getCC(af.OS, af.Arch)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get c compiler: %w", err)
 	}
@@ -49,10 +49,10 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 
 func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GO_VERSION": tc.GCVersion,
-		"TC_DEPS":    strings.Join(tc.Dependencies, " "),
-		"BUILD_CMD":  tc.BuildCmd,
-		"CC":         tc.CC,
+		"GO_VERSION":     tc.GCVersion,
+		"TOOLCHAIN_DEPS": strings.Join(tc.Dependencies, " "),
+		"BUILD_CMD":      tc.BuildCmd,
+		"CC":             tc.CC,
 	}
 }
 

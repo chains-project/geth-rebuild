@@ -4,29 +4,34 @@ FROM ubuntu:${UBUNTU_DIST} as builder
 
 
 ARG GETH_SRC_DIR="./tmp/go-ethereum"
+
 # artifact spec
-ARG GETH_VERSION=""
-ARG GOOS="" 
-ARG GOARCH=""
+ARG OS="" 
 ARG ARCH=""
+ARG GETH_VERSION=""
 ARG GETH_COMMIT=""
 ARG SHORT_COMMIT=""
+
 # toolchain spec
 ARG GO_VERSION=""
-ARG BUILD_CMD=""
-ARG TC_DEPS=""
-# environment spec
-ARG UB_DEPS=""
-ARG ELF_TARGET=""
-ARG GOARM=""
 ARG CC=""
+ARG BUILD_CMD=""
+ARG TOOLCHAIN_DEPS=""
+
+# environment spec
+ARG GOOS=""
+ARG GOARCH=""
+ARG GOARM=""
+ARG ELF_TARGET=""
+ARG UTIL_DEPS=""
 
 ENV CGO_ENABLED=1
 ENV PATH=/usr/local:/usr/bin:$PATH
 
+
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
-    ${UB_DEPS} \
-    ${TC_DEPS}
+    ${UTIL_DEPS} \
+    ${TOOLCHAIN_DEPS}
 
 # Install Go
 RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -37,7 +42,7 @@ RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
 ENV PATH=$PATH:/usr/local/go/bin
 
 # Fetch reference binary and strip symbols + build ids
-ENV BIN_DIR="geth-${GOOS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
+ENV BIN_DIR="geth-${OS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
 ENV REF_URL="https://gethstore.blob.core.windows.net/builds/${TAR_DIR}"
 ENV REFERENCE_DEST=/bin/geth-reference
@@ -61,7 +66,7 @@ RUN cd ${GETH_DEST_DIR}/build/bin && \
     strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
     mv geth ${REPRODUCE_DEST}
 
-
+# Second stage build for compact final image
 FROM alpine:latest
 
 COPY --from=builder /bin/geth-reference /bin/geth-reference

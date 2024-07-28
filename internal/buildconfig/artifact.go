@@ -7,21 +7,20 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-// specifies information about the artifact to rebuild
+// specifies artifact info
 type ArtifactSpec struct {
-	GOOS        utils.OS
-	GOARCH      utils.Arch
-	Version     string
+	OS          utils.OS
+	Arch        utils.Arch
+	GethVersion string
 	Commit      string
 	ShortCommit string
 }
 
 func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GOOS":         string(af.GOOS),
-		"ARCH":         string(af.GOARCH),
-		"GOARCH":       "arm",
-		"GETH_VERSION": af.Version,
+		"OS":           string(af.OS),
+		"ARCH":         string(af.Arch),
+		"GETH_VERSION": af.GethVersion,
 		"COMMIT":       af.Commit,
 		"SHORT_COMMIT": af.ShortCommit,
 	}
@@ -29,7 +28,7 @@ func (af ArtifactSpec) ToMap() map[string]string {
 
 func (af ArtifactSpec) String() string {
 	return fmt.Sprintf("ArtifactSpec: (Version:%s, GOOS:%s, GOARCH:%s, Commit:%s, ShortCommit:%s)",
-		af.Version, af.GOOS, af.GOARCH, af.Commit, af.ShortCommit)
+		af.GethVersion, af.OS, af.Arch, af.Commit, af.ShortCommit)
 }
 
 // Returns configured rebuild Artifact Specification
@@ -67,9 +66,9 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 	}
 
 	af = ArtifactSpec{
-		Version:     pa.GethVersion,
-		GOOS:        pa.GOOS,
-		GOARCH:      pa.GOARCH,
+		GethVersion: pa.GethVersion,
+		OS:          pa.GOOS,
+		Arch:        pa.GOARCH,
 		Commit:      commit,
 		ShortCommit: commit[0:8],
 	}

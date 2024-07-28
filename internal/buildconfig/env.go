@@ -9,68 +9,52 @@ import (
 
 type EnvSpec struct {
 	UbuntuDist   string
-	ElfTarget    string
-	ArmVersion   string
+	Flags        FlagSpec
 	Dependencies []string
 }
 
+type FlagSpec struct {
+	GOOS       string
+	GOARCH     string
+	ElfTarget  string
+	ArmVersion string
+}
+
 // Returns configured rebuild Environment specification
-func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (ub EnvSpec, err error) {
-	dist, err := getUbuntuDist(af.Version)
+func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
+	dist, err := getUbuntuDist(af.GethVersion)
 	if err != nil {
-		return ub, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
+		return env, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
 	}
 
-	elfTarget, err := getElfTarget(af.GOOS, af.GOARCH)
+	envFlags, err := newFlagSpec(af)
 	if err != nil {
-		return ub, fmt.Errorf("failed to get ELF target: %w", err)
+		return env, fmt.Errorf("failed to set environment flag specification: %w", err)
 	}
 
-	armV, err := getArmVersion(af.GOOS, af.GOARCH) // TODO change to optional
-	if err != nil {
-		return ub, fmt.Errorf("failed to get arm version: %w", err)
-	}
-
-	ub = EnvSpec{
+	env = EnvSpec{
 		UbuntuDist:   dist,
-		ElfTarget:    elfTarget,
-		ArmVersion:   armV,
+		Flags:        envFlags,
 		Dependencies: DefaultConfig.UtilDeps,
 	}
-	return ub, nil
+	return env, nil
 }
 
-func (ub EnvSpec) ToMap() map[string]string {
+func (env EnvSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST": ub.UbuntuDist,
-		"ELF_TARGET":  ub.ElfTarget,
-		//"GOARM":       ub.ArmVersion, // TODO fix optional flags to avoid arm issue for non arm builds
-		"UB_DEPS": strings.Join(ub.Dependencies, " "),
+		"UBUNTU_DIST": env.UbuntuDist,
+		"GOOS":        env.Flags.GOOS,
+		"GOARCH":      env.Flags.GOARCH,
+		"ELF_TARGET":  env.Flags.ElfTarget,
+		"GOARM":       env.Flags.ArmVersion,
+		"UTIL_DEPS":   strings.Join(env.Dependencies, " "),
 	}
 }
 
-func (ub EnvSpec) String() string {
-	return fmt.Sprintf("UbuntuSpec: (Dist:%s, ELFTarget:%s, Packages:%v, ARMV: %s)",
-		ub.UbuntuDist, ub.ElfTarget, ub.Dependencies, ub.ArmVersion)
+func (env EnvSpec) String() string {
+	return fmt.Sprintf("Environment specification: (Ubuntu dist:%s, GOOS: %s, GOARCH: %s, ELF target:%s, ARM version: %s, Util dependencies:%v)",
+		env.UbuntuDist, env.Flags.GOOS, env.Flags.GOARCH, env.Flags.ElfTarget, env.Flags.ArmVersion, env.Dependencies)
 }
-
-// Retrieves Ubuntu distribution as defined in travis yaml file (dist : dddd)
-// func getUbuntuDist(travisYML string) (dist string, err error) {
-// 	fileContent, err := os.ReadFile(travisYML)
-// 	if err != nil {
-// 		return "", fmt.Errorf("error reading file %s: %v", travisYML, err)
-// 	}
-
-// 	re := regexp.MustCompile(`dist:\s*([a-z]+)`)
-// 	distDefinition := re.Find(fileContent)
-
-// 	if distDefinition == nil {
-// 		return "", fmt.Errorf("no Ubuntu dist found in file `%s`", travisYML)
-// 	}
-// 	dist = strings.Split(string(distDefinition), ": ")[1]
-// 	return dist, nil
-
-// }
 
 func getElfTarget(ops utils.OS, arch utils.Arch) (string, error) {
 	if targets, ok := DefaultConfig.ElfTargets[ops]; ok {
@@ -88,4 +72,25 @@ func getArmVersion(ops utils.OS, arch utils.Arch) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no GOARM version found for os `%s` or arch `%s`", ops, arch)
+}
+
+func newFlagSpec(af ArtifactSpec) (FlagSpec, error) {
+	goArch := string(af.Arch)
+
+	if strings.Contains("arm", goArch) && len(goArch) == 4 { // exclude arm64 from this rule
+		goArch = "arm" // strip version number
+	}
+
+	version, err := getArmVersion(af.OS, af.Arch) // TODO change to optional
+	if err != nil {
+		return FlagSpec{}, fmt.Errorf("failed to get arm version: %w", err)
+	}
+
+	elfTarget, err := getElfTarget(af.OS, af.Arch)
+	if err != nil {
+		return FlagSpec{}, fmt.Errorf("failed to get ELF target: %w", err)
+	}
+
+	return FlagSpec{GOOS: string(af.OS), GOARCH: goArch, ArmVersion: version, ElfTarget: elfTarget}, nil
+
 }
