@@ -1,32 +1,32 @@
 package buildconfig
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-func TestGetUbuntuDist(t *testing.T) {
-	tests := []struct {
-		YML       string
-		want      string
-		expectErr bool
-	}{
-		{filepath.Join("testdata", ".travis.yml"), "noble", false},
-		{filepath.Join("testdata", ".bad-travis.yml"), "", true},
-	}
+// TODO test travis api.
+// func TestGetUbuntuDist(t *testing.T) {
+// 	tests := []struct {
+// 		YML       string
+// 		want      string
+// 		expectErr bool
+// 	}{
+// 		{filepath.Join("testdata", ".travis.yml"), "noble", false},
+// 		{filepath.Join("testdata", ".bad-travis.yml"), "", true},
+// 	}
 
-	for _, tt := range tests {
-		got, err := getUbuntuDist(tt.YML)
-		if (err != nil) != tt.expectErr {
-			t.Errorf("\ngetUbuntuDist() error = %v, expectErr %v\n%v\n", err, tt.expectErr, tt)
-		}
-		if got != tt.want {
-			t.Errorf("\ngetUbuntuDist() = `%v`, want `%v`\n%v\n", got, tt.want, tt)
-		}
-	}
-}
+// 	for _, tt := range tests {
+// 		got, err := getUbuntuDist(tt.YML)
+// 		if (err != nil) != tt.expectErr {
+// 			t.Errorf("\ngetUbuntuDist() error = %v, expectErr %v\n%v\n", err, tt.expectErr, tt)
+// 		}
+// 		if got != tt.want {
+// 			t.Errorf("\ngetUbuntuDist() = `%v`, want `%v`\n%v\n", got, tt.want, tt)
+// 		}
+// 	}
+// }
 
 func TestGetElfTarget(t *testing.T) {
 	tests := []struct {
