@@ -18,21 +18,24 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
 	}
 	cmdArgs = append(cmdArgs, bi.DockerDir)
+
 	// run docker build
 	_, err := utils.RunCommand("docker", cmdArgs...)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed docker build: %w", err)
 	}
 
 	return nil
 }
 
 func CompareBinaries(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
-	out, err := utils.RunCommand(paths.Scripts.CopyBinaries, dockerTag, paths.Directories.Bin)
+	_, err = utils.RunCommand(paths.Scripts.CopyBinaries, dockerTag, paths.Directories.Bin)
 	if err != nil {
 		return false, err
 	}
-
-	fmt.Println("out: ", out)
-	return true, nil
+	_, err = utils.RunCommand(paths.Scripts.CompareBinaries, paths.Files.ReferenceBin, paths.Files.RebuildBin)
+	if err != nil {
+		return false, err
+	}
+	return true, nil // TODO
 }
