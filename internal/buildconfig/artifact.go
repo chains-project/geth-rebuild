@@ -67,8 +67,8 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 
 	af = ArtifactSpec{
 		GethVersion: pa.GethVersion,
-		OS:          pa.GOOS,
-		Arch:        pa.GOARCH,
+		OS:          pa.OS,
+		Arch:        pa.Arch,
 		Commit:      commit,
 		ShortCommit: commit[0:8],
 	}

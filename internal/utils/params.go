@@ -35,8 +35,8 @@ var allowedArch = map[OS][]Arch{
 
 // Program Args holds parsed input arguments to main program
 type ProgramArgs struct {
-	GOOS        OS
-	GOARCH      Arch
+	OS          OS
+	Arch        Arch
 	GethVersion string
 	ForceClone  bool
 	Unstable    string
@@ -59,8 +59,8 @@ func ParseArgs() (*ProgramArgs, error) {
 	}
 
 	pa := &ProgramArgs{
-		GOOS:        OS(os.Args[1]),
-		GOARCH:      Arch(os.Args[2]),
+		OS:          OS(os.Args[1]),
+		Arch:        Arch(os.Args[2]),
 		GethVersion: os.Args[3],
 	}
 
@@ -82,10 +82,10 @@ func ParseArgs() (*ProgramArgs, error) {
 
 // Validate program arguments
 func ValidArgs(pa *ProgramArgs) error {
-	if err := validOs(pa.GOOS); err != nil {
+	if err := validOs(pa.OS); err != nil {
 		return err
 	}
-	if err := validArch(pa.GOOS, pa.GOARCH); err != nil {
+	if err := validArch(pa.OS, pa.Arch); err != nil {
 		return err
 	}
 	if err := validVersion(pa.GethVersion); err != nil {

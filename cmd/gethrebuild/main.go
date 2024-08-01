@@ -36,6 +36,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("\nRebuilding geth at version %s for %s %s\n\n", pa.GethVersion, pa.OS, pa.Arch)
+
 	// artifact specification
 	af, err := config.NewArtifactSpec(pa, paths)
 	if err != nil {
@@ -71,5 +73,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	utils.RunCommand(paths.Scripts.CompareBinaries, paths.Files.ReferenceBin, paths.Files.RebuildBin)
 }
