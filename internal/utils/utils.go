@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -64,13 +65,16 @@ func GetRootDir(base string) (string, error) {
 func GetGitCommit(dir string) (string, error) {
 	dirFlag := fmt.Sprintf("--git-dir=%s/.git", dir)
 	treeFlag := fmt.Sprintf("--work-tree=%s", dir)
+
 	commit, err := RunCommand("git", dirFlag, treeFlag, "log", "-1", "--format=%H")
+
 	if err != nil {
 		return "", err
 	}
 	if commit == "" {
 		return "", fmt.Errorf("no commit found in dir %s", dir)
 	}
+
 	commit = strings.ReplaceAll(commit, "\n", "")
 	return commit, nil
 }
@@ -86,12 +90,42 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-// Contains for a string slice
-func Contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
+// Runs a script that starts Docker // TODO: works on ubuntu???
+func StartDocker(paths Paths) error {
+	_, err := RunCommand(paths.Scripts.StartDocker)
+	if err != nil {
+		return err
 	}
-	return false
+	return nil
+}
+
+// Performs an HTTP GET request and returns the response body as a string
+func HttpGetRequest(url string, headers map[string]string) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error: received status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
 }
