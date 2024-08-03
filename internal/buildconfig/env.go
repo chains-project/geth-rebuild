@@ -14,10 +14,9 @@ type EnvSpec struct {
 }
 
 type FlagSpec struct {
-	GOOS       string
-	GOARCH     string
-	ElfTarget  string
-	ArmVersion string
+	CGO_ENABLED string
+	ElfTarget   string
+	ArmVersion  string
 }
 
 // Returns configured rebuild Environment specification
@@ -43,8 +42,7 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 func (env EnvSpec) ToMap() map[string]string {
 	return map[string]string{
 		"UBUNTU_DIST": env.UbuntuDist,
-		"GOOS":        env.Flags.GOOS,
-		"GOARCH":      env.Flags.GOARCH,
+		"CGO_ENABLED": env.Flags.CGO_ENABLED,
 		"ELF_TARGET":  env.Flags.ElfTarget,
 		"GOARM":       env.Flags.ArmVersion,
 		"UTIL_DEPS":   strings.Join(env.Dependencies, " "),
@@ -52,8 +50,8 @@ func (env EnvSpec) ToMap() map[string]string {
 }
 
 func (env EnvSpec) String() string {
-	return fmt.Sprintf("Environment specification: (Ubuntu dist:%s, GOOS: %s, GOARCH: %s, ELF target:%s, ARM version: %s, Util dependencies:%v)",
-		env.UbuntuDist, env.Flags.GOOS, env.Flags.GOARCH, env.Flags.ElfTarget, env.Flags.ArmVersion, env.Dependencies)
+	return fmt.Sprintf("Environment specification: (Ubuntu dist:%s, CGO_ENABLED:%s, ELF target:%s, ARM version: %s, Util dependencies:%v)",
+		env.UbuntuDist, env.Flags.CGO_ENABLED, env.Flags.ElfTarget, env.Flags.ArmVersion, env.Dependencies)
 }
 
 func getElfTarget(ops utils.OS, arch utils.Arch) (string, error) {
@@ -75,13 +73,14 @@ func getArmVersion(ops utils.OS, arch utils.Arch) (string, error) {
 }
 
 func newFlagSpec(af ArtifactSpec) (FlagSpec, error) {
-	goArch := string(af.Arch)
-
-	if strings.Contains(goArch, "arm") && len(goArch) == 4 { // exclude arm64 from this rule
-		goArch = "arm" // strip version number
+	var CGOEnabled string
+	if af.Arch == utils.AMD64 {
+		CGOEnabled = "1"
+	} else {
+		CGOEnabled = "0" // cross compilation - CGO will be enabled through geth source code (using /build/ci.go)
 	}
 
-	version, err := getArmVersion(af.OS, af.Arch) // TODO change to optional
+	version, err := getArmVersion(af.OS, af.Arch)
 	if err != nil {
 		return FlagSpec{}, fmt.Errorf("failed to get arm version: %w", err)
 	}
@@ -91,6 +90,6 @@ func newFlagSpec(af ArtifactSpec) (FlagSpec, error) {
 		return FlagSpec{}, fmt.Errorf("failed to get ELF target: %w", err)
 	}
 
-	return FlagSpec{GOOS: string(af.OS), GOARCH: goArch, ArmVersion: version, ElfTarget: elfTarget}, nil
+	return FlagSpec{CGO_ENABLED: CGOEnabled, ArmVersion: version, ElfTarget: elfTarget}, nil
 
 }
