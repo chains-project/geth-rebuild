@@ -28,11 +28,11 @@ type Files struct {
 }
 
 type Scripts struct {
-	Clone           string
-	Checkout        string
-	StartDocker     string
-	CopyBinaries    string
-	CompareBinaries string
+	Clone        string
+	Checkout     string
+	StartDocker  string
+	CopyBinaries string
+	Verify       string
 }
 
 // Sets project paths.
@@ -56,10 +56,10 @@ func SetUpPaths() Paths {
 			RebuildBin:   filepath.Join(rootDir, "bin", "geth-reproduce"),
 		},
 		Scripts: Scripts{
-			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
-			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
-			CopyBinaries:    filepath.Join(rootDir, "internal", "scripts", "copy_bin.sh"),
-			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_bin.sh"),
+			Checkout:     filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
+			StartDocker:  filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
+			CopyBinaries: filepath.Join(rootDir, "internal", "scripts", "copy_bin.sh"), // TODO
+			Verify:       filepath.Join(rootDir, "internal", "scripts", "verify.sh"),
 		},
 	}
 	return paths

@@ -28,14 +28,13 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 	return nil
 }
 
-func CompareBinaries(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
+func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
 	_, err = utils.RunCommand(paths.Scripts.CopyBinaries, dockerTag, paths.Directories.Bin)
 	if err != nil {
 		return false, err
 	}
-	_, err = utils.RunCommand(paths.Scripts.CompareBinaries, paths.Files.ReferenceBin, paths.Files.RebuildBin)
-	if err != nil {
-		return false, err
-	}
-	return true, nil // TODO
+	return false, err
+	// run detached mode "copy script"
+	// i.e. compare binaries and copy them to local bin...
+	
 }

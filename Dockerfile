@@ -76,3 +76,13 @@ ARG REPRODUCE_LOC
 
 COPY --from=builder ${REFERENCE_LOC} ${REFERENCE_LOC}
 COPY --from=builder ${REPRODUCE_LOC} ${REPRODUCE_LOC}
+
+# TODO send script location as arg?
+ENV SCRIPT_SRC=./internal/scripts/verify.sh
+ENV VERIFY_SCRIPT=/bin/verify.sh
+COPY ${SCRIPT_SRC} ${VERIFY_SCRIPT}
+RUN chmod +x ${VERIFY_SCRIPT}
+
+
+CMD ["/bin/verify.sh", "/bin/geth-reference", "/bin/geth-reproduce"] 
+#TODO can use params??

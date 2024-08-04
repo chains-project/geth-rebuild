@@ -17,7 +17,7 @@ func init() {
 		paths.Scripts.Checkout,
 		paths.Scripts.StartDocker,
 		paths.Scripts.CopyBinaries,
-		paths.Scripts.CompareBinaries,
+		paths.Scripts.Verify,
 	}
 	err := utils.ChangePermissions(scripts, 0755) // add execute permissions
 	if err != nil {
@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\nRebuilding geth at version %s for %s %s\n\n", pa.GethVersion, pa.OS, pa.Arch)
+	fmt.Printf("\nRebuilding geth at version %s for %s %s\n\n", fmt.Sprintf("%s %s", pa.GethVersion, pa.Unstable), pa.OS, pa.Arch)
 
 	// artifact specification
 	af, err := config.NewArtifactSpec(pa, paths)
@@ -69,7 +69,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, err = rebuild.CompareBinaries(bi.DockerTag, paths)
+	_, err = rebuild.Verify(bi.DockerTag, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
