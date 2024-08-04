@@ -6,7 +6,6 @@ type DefaultConfigs struct {
 	ToolchainDeps map[utils.OS]map[utils.Arch][]string
 	ElfTargets    map[utils.OS]map[utils.Arch]string
 	ArmVersions   map[utils.OS]map[utils.Arch]string
-	CC            map[utils.OS]map[utils.Arch]string
 	UtilDeps      []string
 }
 
@@ -39,16 +38,6 @@ var DefaultConfig = DefaultConfigs{
 			utils.ARM5:  "5",
 			utils.ARM6:  "6",
 			utils.ARM7:  "7",
-		},
-	},
-	CC: map[utils.OS]map[utils.Arch]string{
-		utils.Linux: {
-			utils.AMD64: "", // no cc flag needed
-			utils.A386:  "",
-			utils.ARM64: "aarch64-linux-gnu-gcc",
-			utils.ARM5:  "arm-linux-gnueabi-gcc",
-			utils.ARM6:  "arm-linux-gnueabi-gcc",
-			utils.ARM7:  "arm-linux-gnueabihf-gcc",
 		},
 	},
 	UtilDeps: []string{"git", "ca-certificates", "wget", "binutils"},

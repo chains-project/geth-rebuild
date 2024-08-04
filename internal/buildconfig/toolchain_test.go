@@ -48,7 +48,7 @@ func TestGetGCVersion(t *testing.T) {
 		{filepath.Join("testdata", "bad-checksums.txt"), "", true},
 	}
 	for _, tt := range tests {
-		got, err := getGCVersion(tt.fileContent)
+		got, err := getGoVersion(tt.fileContent)
 		if (err != nil) != tt.expectErr {
 			t.Errorf("\ngetGCVersion() error = %v, expectErr %v\n%v\n", err, tt.expectErr, tt)
 		}
