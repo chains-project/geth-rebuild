@@ -29,12 +29,7 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 }
 
 func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
-	_, err = utils.RunCommand(paths.Scripts.CopyBinaries, dockerTag, paths.Directories.Bin)
-	if err != nil {
-		return false, err
-	}
+	_, err = utils.RunCommand(paths.Scripts.Verify, dockerTag, paths.Directories.Bin)
+	// TODO handle errors, different exit codes...
 	return false, err
-	// run detached mode "copy script"
-	// i.e. compare binaries and copy them to local bin...
-	
 }

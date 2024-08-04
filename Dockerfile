@@ -71,18 +71,19 @@ RUN strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remov
 # Second stage build for compact final image
 FROM alpine:latest
 
+# Copy produced binaries
 ARG REFERENCE_LOC
 ARG REPRODUCE_LOC
 
 COPY --from=builder ${REFERENCE_LOC} ${REFERENCE_LOC}
 COPY --from=builder ${REPRODUCE_LOC} ${REPRODUCE_LOC}
 
-# TODO send script location as arg?
-ENV SCRIPT_SRC=./internal/scripts/verify.sh
-ENV VERIFY_SCRIPT=/bin/verify.sh
-COPY ${SCRIPT_SRC} ${VERIFY_SCRIPT}
-RUN chmod +x ${VERIFY_SCRIPT}
+# Get binary comparison script
+ENV SCRIPT_SRC=./internal/scripts/compare_binaries.sh
+ENV SCRIPT_DEST=/bin/compare.sh
 
+COPY ${SCRIPT_SRC} ${SCRIPT_DEST}
+RUN chmod +x ${SCRIPT_DEST}
 
-CMD ["/bin/verify.sh", "/bin/geth-reference", "/bin/geth-reproduce"] 
-#TODO can use params??
+# Run binary verification/comparison on run
+CMD ["/bin/compare.sh", "/bin/geth-reference", "/bin/geth-reproduce"]

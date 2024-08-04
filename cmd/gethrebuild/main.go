@@ -16,10 +16,10 @@ func init() {
 	scripts := []string{
 		paths.Scripts.Checkout,
 		paths.Scripts.StartDocker,
-		paths.Scripts.CopyBinaries,
+		paths.Scripts.CompareBinaries,
 		paths.Scripts.Verify,
 	}
-	err := utils.ChangePermissions(scripts, 0755) // add execute permissions
+	err := utils.ChangePermission(scripts, 0755) // add execute permissions
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,6 +70,7 @@ func main() {
 	}
 
 	_, err = rebuild.Verify(bi.DockerTag, paths)
+	// TODO handle cases: match, error and mismatch
 	if err != nil {
 		log.Fatal(err)
 	}

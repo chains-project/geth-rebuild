@@ -24,15 +24,15 @@ type Files struct {
 	Travis       string
 	Checksums    string
 	ReferenceBin string
-	RebuildBin   string
+	ReproduceBin string
 }
 
 type Scripts struct {
-	Clone        string
-	Checkout     string
-	StartDocker  string
-	CopyBinaries string
-	Verify       string
+	Clone           string
+	Checkout        string
+	StartDocker     string
+	CompareBinaries string
+	Verify          string
 }
 
 // Sets project paths.
@@ -53,13 +53,13 @@ func SetUpPaths() Paths {
 			Travis:       filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
 			Checksums:    filepath.Join(rootDir, "tmp", "go-ethereum", "build", "checksums.txt"),
 			ReferenceBin: filepath.Join(rootDir, "bin", "geth-reference"),
-			RebuildBin:   filepath.Join(rootDir, "bin", "geth-reproduce"),
+			ReproduceBin: filepath.Join(rootDir, "bin", "geth-reproduce"),
 		},
 		Scripts: Scripts{
-			Checkout:     filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
-			StartDocker:  filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
-			CopyBinaries: filepath.Join(rootDir, "internal", "scripts", "copy_bin.sh"), // TODO
-			Verify:       filepath.Join(rootDir, "internal", "scripts", "verify.sh"),
+			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
+			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
+			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_binaries.sh"),
+			Verify:          filepath.Join(rootDir, "internal", "scripts", "verify.sh"),
 		},
 	}
 	return paths
