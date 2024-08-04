@@ -64,7 +64,7 @@ func getBuildCommand(ops utils.OS, arch utils.Arch, travisYML string) (string, e
 }
 
 // Regexp matches linux build commands for given architecture
-func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, error) {
+func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, error) { // TODO messy functions ahead...
 	var pattern string
 
 	switch arch {
