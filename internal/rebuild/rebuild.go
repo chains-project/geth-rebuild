@@ -38,13 +38,15 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 	return nil
 }
 
-func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) { // TODO think about naming...
+// TODO split up megalong function... make nice.
+// TODO think about naming... verify/rebuild/reproduce/compare...
+func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
 	_, err = utils.RunCommand(paths.Scripts.Verify, dockerTag, paths.Directories.Bin, paths.Directories.Logs)
 	if err != nil {
 		return false, fmt.Errorf("failed rebuild verification: %w", err)
 	}
-	// TODO split up function
-	logFile := filepath.Join(paths.Directories.Logs, dockerTag)
+
+	logFile := filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", dockerTag))
 	data, err := os.ReadFile(logFile)
 	if err != nil {
 		log.Fatal(err)
@@ -58,24 +60,28 @@ func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) { 
 	os.Mkdir(paths.Directories.Match, 0755)
 	os.Mkdir(paths.Directories.Mismatch, 0755)
 
+	var logDir string
 	switch result.Status {
 	case "match":
-		logCategorized := filepath.Join(paths.Directories.Match, dockerTag)
-		os.Rename(logFile, logCategorized)
-		fmt.Printf("\nLog written to %s\n", logCategorized)
-		return true, nil
+		reproduces = true
+		logDir = filepath.Join(paths.Directories.Match, dockerTag)
 	case "mismatch":
-		logCategorized := filepath.Join(paths.Directories.Mismatch, dockerTag)
-		os.Rename(logFile, logCategorized)
-		fmt.Printf("\nLog written to %s\n", logCategorized)
-		return false, nil
+		logDir = filepath.Join(paths.Directories.Mismatch, dockerTag)
+		reproduces = false
 	default:
 		return false, fmt.Errorf("error: unknown rebuild status: %s", result.Status)
 	}
+
+	os.Mkdir(logDir, 0755)
+	logCategorized := filepath.Join(logDir, fmt.Sprintf("%s.json", dockerTag))
+	os.Rename(logFile, logCategorized)
+	fmt.Printf("\nLog written to %s\n", logCategorized)
+	return
 }
 
-func diff(paths utils.Paths) {
-	utils.RunCommand("")
-	// TODO handle with a flag --diffoscope
-
+func DiffReport(dockerTag string, paths utils.Paths) {
+	binDir := filepath.Join(paths.Directories.Bin, dockerTag)
+	fmt.Printf("\nWriting diff report to %s...", binDir)
+	diffLog := filepath.Join(paths.Directories.Logs, "mismatch", dockerTag, fmt.Sprintf("%s.html", dockerTag))
+	utils.RunCommand(paths.Scripts.DiffReport, binDir, diffLog)
 }

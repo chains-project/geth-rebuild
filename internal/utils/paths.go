@@ -31,10 +31,10 @@ type Files struct {
 }
 
 type Scripts struct {
-	Clone           string
 	Checkout        string
-	StartDocker     string
 	CompareBinaries string
+	DiffReport      string
+	StartDocker     string
 	Verify          string
 }
 
@@ -52,8 +52,8 @@ func SetUpPaths() Paths {
 			Geth:     filepath.Join(rootDir, "tmp", "go-ethereum"),
 			Bin:      filepath.Join(rootDir, "bin"),
 			Logs:     filepath.Join(rootDir, "logs"),
-			Match:    filepath.Join(rootDir, "logs", "matches"),
-			Mismatch: filepath.Join(rootDir, "logs", "mismatches"),
+			Match:    filepath.Join(rootDir, "logs", "match"),
+			Mismatch: filepath.Join(rootDir, "logs", "mismatch"),
 		},
 		Files: Files{
 			Travis:       filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),
@@ -63,8 +63,9 @@ func SetUpPaths() Paths {
 		},
 		Scripts: Scripts{
 			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
-			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
 			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_binaries.sh"),
+			DiffReport:      filepath.Join(rootDir, "internal", "scripts", "diff_report.sh"),
+			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
 			Verify:          filepath.Join(rootDir, "internal", "scripts", "verify.sh"),
 		},
 	}

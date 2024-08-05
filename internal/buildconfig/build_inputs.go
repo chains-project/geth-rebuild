@@ -60,7 +60,7 @@ func (bi BuildInput) GetBuildArgs() map[string]string {
 // Creates a timestamped tag for a Docker build
 func createDockerTag(version string, ops string, arch string) string {
 	now := time.Now()
-	timestamp := now.Format("2006-01-02-15:04")
+	timestamp := now.Format("2006-01-02-15.04")
 	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, ops, arch, timestamp)
 	return tag
 }

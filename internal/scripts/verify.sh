@@ -60,20 +60,22 @@ docker cp "$CONTAINER_ID:/bin/geth-reproduce" "$BIN_DIR/$DOCKER_TAG" ||   { echo
 echo
 echo "Stopping container $CONTAINER_ID"
 docker stop "$CONTAINER_ID" || { echo "error: container id not found"; exit 1; }
+echo "Remove the container with docker rm $CONTAINER_ID"
+echo
 
 # Log info
-echo && echo "You can run the verification again with 'docker run -it $DOCKER_TAG'"
-echo "Remove the container with docker rm $CONTAINER_ID"
+echo "You can run the verification again with 'docker run -it $DOCKER_TAG'"
+echo 
 
 
 mkdir -p "$LOG_DIR"
 
 if [ "$SCRIPT_EXIT_STATUS" -eq 0 ]; then
-    echo "{\"image\": \"$DOCKER_TAG\", \"status\": \"match\", \"cid\": \"$CONTAINER_ID\"}" > "$LOG_DIR/$DOCKER_TAG"
+    echo "{\"image\": \"$DOCKER_TAG\", \"status\": \"match\", \"cid\": \"$CONTAINER_ID\"}" > "$LOG_DIR/$DOCKER_TAG.json"
     exit 0
 fi
 
 if [ "$SCRIPT_EXIT_STATUS" -eq 1 ]; then
-    echo "{\"image\": \"$DOCKER_TAG\", \"status\": \"mismatch\", \"cid\": \"$CONTAINER_ID\"}" > "$LOG_DIR/$DOCKER_TAG"
+    echo "{\"image\": \"$DOCKER_TAG\", \"status\": \"mismatch\", \"cid\": \"$CONTAINER_ID\"}" > "$LOG_DIR/$DOCKER_TAG.json"
     exit 0
 fi

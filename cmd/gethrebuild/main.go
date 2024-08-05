@@ -15,8 +15,9 @@ func init() {
 	// set up scripts
 	scripts := []string{
 		paths.Scripts.Checkout,
-		paths.Scripts.StartDocker,
 		paths.Scripts.CompareBinaries,
+		paths.Scripts.DiffReport,
+		paths.Scripts.StartDocker,
 		paths.Scripts.Verify,
 	}
 	err := utils.ChangePermission(scripts, 0755) // add execute permissions
