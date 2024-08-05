@@ -40,6 +40,7 @@ type ProgramArgs struct {
 	GethVersion string
 	ForceClone  bool
 	Unstable    string
+	Diff        bool
 }
 
 func init() {
@@ -47,7 +48,7 @@ func init() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s <os> <arch> <version> [--force-clone] [--unstable <commit hash>]\nExample: %s linux amd64 1.14.3\n\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
+	fmt.Fprintf(os.Stderr, "Usage: %s <os> <arch> <version> [--force-clone] [--unstable <commit hash>] [--diff]\nExample: %s linux amd64 1.14.3\n\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
 	flag.PrintDefaults()
 	fmt.Fprintln(os.Stderr, "Reproduce a geth linux binary release\nUse --help for command documentation")
 }
@@ -68,6 +69,7 @@ func ParseArgs() (*ProgramArgs, error) {
 	optional := flag.NewFlagSet("optional", flag.ExitOnError)
 	optional.BoolVar(&pa.ForceClone, "force-clone", false, "Forces a new clone of geth repository and removes any existing geth repo in /tmp")
 	optional.StringVar(&pa.Unstable, "unstable", "", "Rebuilds an unstable build specified by given commit hash and version")
+	optional.BoolVar(&pa.Diff, "diff", false, "Write diff report in case of binary mismatch")
 	help := optional.Bool("help", false, "Show command documentation")
 
 	optional.Parse(os.Args[4:])
