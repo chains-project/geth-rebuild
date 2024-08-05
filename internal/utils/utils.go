@@ -90,7 +90,7 @@ func ChangePermission(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-// Runs a script that starts Docker // TODO: works on ubuntu???
+// Runs a script that starts Docker daemon on machine
 func StartDocker(paths Paths) error {
 	_, err := RunCommand(paths.Scripts.StartDocker)
 	if err != nil {

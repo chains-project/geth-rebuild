@@ -5,7 +5,8 @@ import (
 	"path/filepath"
 )
 
-// path structs
+// Sets up paths that are needed in program
+
 type Paths struct {
 	Directories Directories
 	Scripts     Scripts
@@ -38,7 +39,7 @@ type Scripts struct {
 	Verify          string
 }
 
-// Sets project paths.
+// Sets up project paths according to predefined paths
 func SetUpPaths() Paths {
 	rootDir, err := GetRootDir("geth-rebuild")
 	if err != nil {

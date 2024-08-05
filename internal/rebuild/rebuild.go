@@ -11,7 +11,7 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type Rebuild struct {
+type ResultLog struct {
 	Image  string `json:"image"` // TODO name it tag??
 	Status string `json:"status"`
 	CID    string `json:"cid"`
@@ -52,7 +52,7 @@ func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
 		log.Fatal(err)
 	}
 
-	var result Rebuild
+	var result ResultLog
 	if err := json.Unmarshal(data, &result); err != nil {
 		log.Fatal(err)
 	}
