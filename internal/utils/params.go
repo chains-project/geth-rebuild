@@ -4,36 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"slices"
 )
 
-type OS string
+/* Handles program argument parsing and validation */
 
-type Arch string
-
-const (
-	Linux   OS = "linux"
-	Darwin  OS = "darwin"
-	Windows OS = "windows"
-)
-
-const (
-	AMD64 Arch = "amd64"
-	ARM64 Arch = "arm64"
-	ARM5  Arch = "arm5"
-	ARM6  Arch = "arm6"
-	ARM7  Arch = "arm7"
-	A386  Arch = "386"
-)
-
-// Map of allowed architectures for each OS
-var allowedArch = map[OS][]Arch{
-	Linux: {AMD64, ARM64, ARM5, ARM6, ARM7, A386},
-}
-
-// Program Args holds parsed input arguments to main program
 type ProgramArgs struct {
 	OS          OS
 	Arch        Arch
@@ -43,51 +19,45 @@ type ProgramArgs struct {
 	Diff        bool
 }
 
+var (
+	pa       = &ProgramArgs{}
+	optional = flag.NewFlagSet("optional", flag.ExitOnError)
+)
+
 func init() {
-	flag.Usage = usage
+	// Set up optional program arguments
+	optional.Usage = usage
+	optional.BoolVar(&pa.ForceClone, "force-clone", false, "Forces a fresh clone of geth repo and removes any existing repo in ./tmp")
+	optional.StringVar(&pa.Unstable, "unstable", "", "Rebuilds an unstable build specified by given commit hash\nNote: version number must be correct")
+	optional.BoolVar(&pa.Diff, "diff", false, "Write diff report in case of binary mismatch")
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s <os> <arch> <version> [--force-clone] [--unstable <commit hash>] [--diff]\nExample: %s linux amd64 1.14.3\n\n", filepath.Base(os.Args[0]), filepath.Base(os.Args[0]))
-	flag.PrintDefaults()
-	fmt.Fprintln(os.Stderr, "Reproduce a geth linux binary release\nUse --help for command documentation")
+	msg := "Usage:      gethrebuild OS ARCH VERSION [OPTIONS]\n\nExample:    gethrebuild linux amd64 1.14.3\n\nOptions:\n"
+	fmt.Fprint(os.Stderr, msg)
+	optional.PrintDefaults()
+	fmt.Fprintf(os.Stderr, "\n")
 }
 
+// Parses program arguments from command line
 func ParseArgs() (*ProgramArgs, error) {
 	if len(os.Args) < 4 {
 		usage()
 		return nil, fmt.Errorf("not enough arguments")
 	}
 
-	pa := &ProgramArgs{
-		OS:          OS(os.Args[1]),
-		Arch:        Arch(os.Args[2]),
-		GethVersion: os.Args[3],
-	}
-
-	// parse optional flags into ProgramArgs struct
-	optional := flag.NewFlagSet("optional", flag.ExitOnError)
-	optional.BoolVar(&pa.ForceClone, "force-clone", false, "Forces a new clone of geth repository and removes any existing geth repo in /tmp")
-	optional.StringVar(&pa.Unstable, "unstable", "", "Rebuilds an unstable build specified by given commit hash and version")
-	optional.BoolVar(&pa.Diff, "diff", false, "Write diff report in case of binary mismatch")
-	help := optional.Bool("help", false, "Show command documentation")
+	pa.OS = OS(os.Args[1])
+	pa.Arch = Arch(os.Args[2])
+	pa.GethVersion = os.Args[3]
 
 	optional.Parse(os.Args[4:])
-
-	if *help {
-		usage()
-		os.Exit(1)
-	}
 
 	return pa, nil
 }
 
-// Validate program arguments
+// Validates mandatory program arguments: os, arch, version
 func ValidArgs(pa *ProgramArgs) error {
-	if err := validOs(pa.OS); err != nil {
-		return err
-	}
-	if err := validArch(pa.OS, pa.Arch); err != nil {
+	if err := validPlatform(pa.OS, pa.Arch); err != nil {
 		return err
 	}
 	if err := validVersion(pa.GethVersion); err != nil {
@@ -96,29 +66,17 @@ func ValidArgs(pa *ProgramArgs) error {
 	return nil
 }
 
-func validOs(os OS) error {
-	switch OS(os) {
-	case Linux:
-		return nil
-	case Darwin, Windows:
-		return fmt.Errorf("rebuilding not supported for %s", os)
-	default:
-		return fmt.Errorf("invalid OS `%s`", os)
-	}
-}
-
-func validArch(os OS, arch Arch) error {
-	allowedArchs, ok := allowedArch[os]
+func validPlatform(os OS, arch Arch) error {
+	OSAllows, ok := validArchitectures[os]
 	if !ok {
-		return fmt.Errorf("no architectures found for OS `%s`", os)
+		return fmt.Errorf("rebuilding not supported for OS %s", os)
 	}
-	if !slices.Contains(allowedArchs, arch) {
+	if !slices.Contains(OSAllows, arch) {
 		return fmt.Errorf("unsupported architecture `%s` for OS `%s`", arch, os)
 	}
 	return nil
 }
 
-// Helper function to validate version format
 func validVersion(version string) error {
 	versionRegex := `^\d+\.\d+\.\d+$`
 	re := regexp.MustCompile(versionRegex)
