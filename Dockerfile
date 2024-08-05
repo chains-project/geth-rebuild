@@ -21,15 +21,17 @@ ARG BUILD_CMD=""
 ARG TOOLCHAIN_DEPS=""
 
 # Environment spec
-ARG CGO_ENABLED=""
 ARG GOARM=""
 ARG ELF_TARGET=""
 ARG UTIL_DEPS=""
+# For cross compilation, CGO must initially be disabled to avoid error
+# CGO is enabled later on in the geth build script
+ARG CGO_ENABLED=""
 
 # Install packages
 RUN apt-get update && apt-get install -yq --no-install-recommends --force-yes \
-    ${UTIL_DEPS} \
-    ${TOOLCHAIN_DEPS}
+    ${TOOLCHAIN_DEPS} \
+    ${UTIL_DEPS}
 
 #RUN ln -s /usr/include/asm-generic /usr/include/asm
 
@@ -53,17 +55,17 @@ RUN wget ${REF_URL} && \
 
 # Copy local geth repo
 ENV GETH_SRC_DIR=./tmp/go-ethereum
-ENV GETH_DEST_DIR=/go-ethereum
-COPY ${GETH_SRC_DIR} ${GETH_DEST_DIR} 
+ENV GETH_DIR=/go-ethereum
+COPY ${GETH_SRC_DIR} ${GETH_DIR} 
 
 # Rebuild the reference binary
-WORKDIR ${GETH_DEST_DIR}
+WORKDIR ${GETH_DIR}
 RUN git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
     ${BUILD_CMD} ./cmd/geth
 
 
 # Strip symbols and build ids
-WORKDIR ${GETH_DEST_DIR}/build/bin
+WORKDIR ${GETH_DIR}/build/bin
 RUN strip --input-target=${ELF_TARGET} --remove-section .note.go.buildid --remove-section .note.gnu.build-id geth && \
     mv geth ${REPRODUCE_LOC}
 
@@ -80,10 +82,10 @@ COPY --from=builder ${REPRODUCE_LOC} ${REPRODUCE_LOC}
 
 # Get binary comparison script
 ENV SCRIPT_SRC=./internal/scripts/compare_binaries.sh
-ENV SCRIPT_DEST=/bin/compare.sh
+ENV COMPARE_SCRIPT=/bin/compare.sh
 
-COPY ${SCRIPT_SRC} ${SCRIPT_DEST}
-RUN chmod +x ${SCRIPT_DEST}
+COPY ${SCRIPT_SRC} ${COMPARE_SCRIPT}
+RUN chmod +x ${COMPARE_SCRIPT}
 
 # Run binary verification/comparison on run
 CMD ["/bin/compare.sh", "/bin/geth-reference", "/bin/geth-reproduce"]

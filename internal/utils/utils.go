@@ -80,7 +80,7 @@ func GetGitCommit(dir string) (string, error) {
 }
 
 // Changes permissions of scripts to `mode`
-func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
+func ChangePermission(scripts []string, mode os.FileMode) error { // TODO test
 	for _, script := range scripts {
 		err := os.Chmod(script, mode)
 		if err != nil {
