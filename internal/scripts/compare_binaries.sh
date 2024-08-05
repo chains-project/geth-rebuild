@@ -10,7 +10,7 @@ if [ -z "$BIN_REF"  ] || [ -z "$BIN_REP" ]; then
   exit 1
 fi
 
-echo && echo "Comparing SHA256 of binary artefacts"
+echo && echo "Comparing SHA256 of binary artefacts..."
 
 OS=$(uname)
 if [ "$OS" = "Linux" ]; then
@@ -31,14 +31,14 @@ echo "Reproducing build:    sha256    $md5_reproduce" && echo
 # TODO tests for exit status
 
 if [ "$md5_reproduce" != "$md5_reference" ]; then
-    echo "binaries do not match"
+    echo && echo ">>>[REPRODUCTION FAILED] Binaries do not match." && echo && echo
     exit 1
 else
     if [ "$md5_reproduce" = "" ]; then
-        echo "error: no binary produced"
+        echo && echo "ERROR: No artifacts were produced" && echo 
         exit 2
     else
-        echo "binaries match"
+        echo && echo ">>>[REPRODUCTION SUCCESSFUL] Binaries match." && echo && echo
         exit 0
     fi
 fi

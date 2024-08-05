@@ -13,11 +13,14 @@ type Paths struct {
 }
 
 type Directories struct {
-	Root   string
-	Docker string
-	Temp   string
-	Geth   string
-	Bin    string
+	Root     string
+	Docker   string
+	Temp     string
+	Geth     string
+	Bin      string
+	Logs     string
+	Match    string
+	Mismatch string
 }
 
 type Files struct {
@@ -43,11 +46,14 @@ func SetUpPaths() Paths {
 	}
 	paths := Paths{
 		Directories: Directories{
-			Root:   rootDir,
-			Docker: rootDir,
-			Temp:   filepath.Join(rootDir, "tmp"),
-			Geth:   filepath.Join(rootDir, "tmp", "go-ethereum"),
-			Bin:    filepath.Join(rootDir, "bin"),
+			Root:     rootDir,
+			Docker:   rootDir,
+			Temp:     filepath.Join(rootDir, "tmp"),
+			Geth:     filepath.Join(rootDir, "tmp", "go-ethereum"),
+			Bin:      filepath.Join(rootDir, "bin"),
+			Logs:     filepath.Join(rootDir, "logs"),
+			Match:    filepath.Join(rootDir, "logs", "matches"),
+			Mismatch: filepath.Join(rootDir, "logs", "mismatches"),
 		},
 		Files: Files{
 			Travis:       filepath.Join(rootDir, "tmp", "go-ethereum", ".travis.yml"),

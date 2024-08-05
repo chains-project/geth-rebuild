@@ -69,6 +69,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("\nRebuilding finished, comparing binaries...\n\n")
+
 	_, err = rebuild.Verify(bi.DockerTag, paths)
 	// TODO handle cases: match, error and mismatch
 	if err != nil {
