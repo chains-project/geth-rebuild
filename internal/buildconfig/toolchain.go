@@ -10,15 +10,14 @@ import (
 )
 
 type ToolchainSpec struct {
-	GCVersion    string
+	GoVersion    string
 	BuildCmd     string
 	Dependencies []string
-	CC           string
 }
 
 // Returns configured rebuild Toolchain specification
 func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err error) {
-	goVersion, err := getGCVersion(paths.Files.Checksums)
+	goVersion, err := getGoVersion(paths.Files.Checksums)
 	if err != nil {
 		return tc, fmt.Errorf("failed to get Go version: %w", err)
 	}
@@ -33,32 +32,25 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 		return tc, fmt.Errorf("failed to get build command: %w", err)
 	}
 
-	cc, err := getCC(af.OS, af.Arch)
-	if err != nil {
-		return tc, fmt.Errorf("failed to get c compiler: %w", err)
-	}
-
 	tc = ToolchainSpec{
-		GCVersion:    goVersion,
+		GoVersion:    goVersion,
 		Dependencies: deps,
 		BuildCmd:     cmd,
-		CC:           cc,
 	}
 	return tc, nil
 }
 
 func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
-		"GO_VERSION":     tc.GCVersion,
+		"GO_VERSION":     tc.GoVersion,
 		"TOOLCHAIN_DEPS": strings.Join(tc.Dependencies, " "),
 		"BUILD_CMD":      tc.BuildCmd,
-		"CC":             tc.CC,
 	}
 }
 
 func (tc ToolchainSpec) String() string {
 	return fmt.Sprintf("ToolchainSpec: (GoVersion:%s, Dependencies:%s, BuildCmd:%s)",
-		tc.GCVersion, tc.Dependencies, tc.BuildCmd)
+		tc.GoVersion, tc.Dependencies, tc.BuildCmd)
 }
 
 // Retrieves build command for artifact from travis file
@@ -72,7 +64,7 @@ func getBuildCommand(ops utils.OS, arch utils.Arch, travisYML string) (string, e
 }
 
 // Regexp matches linux build commands for given architecture
-func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, error) {
+func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, error) { // TODO messy functions ahead...
 	var pattern string
 
 	switch arch {
@@ -115,7 +107,7 @@ func findBuildCmdInFile(pattern string, travisYML string) (string, error) {
 }
 
 // Returns the Go `gc` compiler version on form `major.minor.patch` as specified by geth checksum file
-func getGCVersion(checksumFile string) (string, error) {
+func getGoVersion(checksumFile string) (string, error) {
 	fileContent, err := os.ReadFile(checksumFile)
 	if err != nil {
 		return "", fmt.Errorf("error reading file %s: %v", checksumFile, err)
@@ -138,7 +130,7 @@ func getGCVersion(checksumFile string) (string, error) {
 	return string(match), nil
 }
 
-// Returns required gcc and libc packages for C cross compilation
+// Returns required gcc and libc packages for C compilation
 func getToolChainDeps(ops utils.OS, arch utils.Arch) ([]string, error) {
 	if archDeps, ok := DefaultConfig.ToolchainDeps[ops]; ok {
 		if deps, ok := archDeps[arch]; ok {
@@ -146,14 +138,4 @@ func getToolChainDeps(ops utils.OS, arch utils.Arch) ([]string, error) {
 		}
 	}
 	return nil, fmt.Errorf("no toolchain dependencies found for `%s` `%s`", ops, arch)
-}
-
-// Returns gcc compiler
-func getCC(ops utils.OS, arch utils.Arch) (string, error) {
-	if archCCs, ok := DefaultConfig.CC[ops]; ok {
-		if cc, ok := archCCs[arch]; ok {
-			return cc, nil
-		}
-	}
-	return "", fmt.Errorf("no toolchain dependencies found for `%s` `%s`", ops, arch)
 }

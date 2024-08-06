@@ -12,14 +12,15 @@ import (
 var paths utils.Paths = utils.SetUpPaths()
 
 func init() {
-	// set up scripts
+	// chmod scripts
 	scripts := []string{
 		paths.Scripts.Checkout,
-		paths.Scripts.StartDocker,
-		paths.Scripts.CopyBinaries,
 		paths.Scripts.CompareBinaries,
+		paths.Scripts.DiffReport,
+		paths.Scripts.StartDocker,
+		paths.Scripts.Verify,
 	}
-	err := utils.ChangePermissions(scripts, 0755) // add execute permissions
+	err := utils.ChangePermission(scripts, 0755) // add execute permissions
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +37,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\nRebuilding geth at version %s for %s %s\n\n", pa.GethVersion, pa.OS, pa.Arch)
+	fmt.Printf("\nRebuilding geth at version %s for %s %s\n\n", fmt.Sprintf("%s %s", pa.GethVersion, pa.Unstable), pa.OS, pa.Arch)
 
 	// artifact specification
 	af, err := config.NewArtifactSpec(pa, paths)
@@ -69,8 +70,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, err = rebuild.CompareBinaries(bi.DockerTag, paths)
+	fmt.Printf("\nRebuilding finished, comparing binaries...\n\n")
+
+	result, err := rebuild.Verify(bi.DockerTag, paths)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if result.Status == "mismatch" && pa.Diff {
+		rebuild.GenerateDiffReport(bi.DockerTag, paths)
 	}
 }

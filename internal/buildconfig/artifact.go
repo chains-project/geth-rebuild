@@ -47,21 +47,28 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		}
 	}
 
-	if pa.Unstable == "" { // stable release, check out version tag
-		err = checkoutGeth(pa.GethVersion, paths)
+	// Git checkout and get commit hash
+	if pa.Unstable == "" {
+		// Stable release, check out version tag
+		versionTag := fmt.Sprintf("v%s", pa.GethVersion)
+
+		err = checkoutGeth(versionTag, paths)
 		if err != nil {
 			return af, err
 		}
+
 		commit, err = utils.GetGitCommit(paths.Directories.Geth)
 		if err != nil {
 			return af, err
 		}
 
-	} else { // unstable build, check out at commit
+	} else {
+		// Unstable build, check out at commit
 		err = checkoutGeth(pa.Unstable, paths)
 		if err != nil {
 			return af, err
 		}
+
 		commit = pa.Unstable
 	}
 
@@ -123,6 +130,7 @@ func cloneGethRepo(paths utils.Paths) error {
 
 // Invokes script that checks out geth at a tagged version or commit
 func checkoutGeth(versionOrCommit string, paths utils.Paths) error {
+	// TODO remove script and run cmd instead...
 	_, err := utils.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, versionOrCommit)
 	if err != nil {
 		return err

@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Runs command with print and returns any outputs and errors
+// Runs command with print and returns any output or error
 func RunCommand(cmd string, args ...string) (out string, err error) {
 	exeCmd := exec.Command(cmd, args...)
 
@@ -80,7 +80,7 @@ func GetGitCommit(dir string) (string, error) {
 }
 
 // Changes permissions of scripts to `mode`
-func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
+func ChangePermission(scripts []string, mode os.FileMode) error { // TODO test
 	for _, script := range scripts {
 		err := os.Chmod(script, mode)
 		if err != nil {
@@ -90,7 +90,7 @@ func ChangePermissions(scripts []string, mode os.FileMode) error { // TODO test
 	return nil
 }
 
-// Runs a script that starts Docker // TODO: works on ubuntu???
+// Runs a script that starts Docker daemon on machine
 func StartDocker(paths Paths) error {
 	_, err := RunCommand(paths.Scripts.StartDocker)
 	if err != nil {

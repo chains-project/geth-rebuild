@@ -14,4 +14,4 @@ echo "Checking out go-ethereum at version $VERSION_OR_COMMIT"
 cd "$GETH_DIR" || { echo "Failed cd to $GETH_DIR"; exit 1; }
 
 git fetch --quiet || { echo "Failed to fetch geth"; exit 1; }
-git checkout --quiet "v$VERSION_OR_COMMIT" || { echo "Failed to checkout to $VERSION_OR_COMMIT."; echo "Does version exist?"; exit 1; }
+git checkout --quiet "$VERSION_OR_COMMIT" || { echo "Failed to checkout to $VERSION_OR_COMMIT."; echo "Does version exist?"; exit 1; }
