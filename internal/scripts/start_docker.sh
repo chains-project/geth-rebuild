@@ -1,13 +1,16 @@
 #!/bin/sh
 set -e
 
+if [ "$(hostname)" = "repairnator" ]; then
+    exit 0
+fi
+
 OS=$(uname)
 
 if [ "$OS" = "Linux" ]; then
     CMD="dockerd &"
 elif [ "$OS" = "Darwin" ]; then
     # docker desktop...
-    # TODO should change to dockerd & here too?
     CMD="open -a Docker"
 else
     echo "Unsupported operating system: $OS"
