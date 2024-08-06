@@ -12,7 +12,7 @@ import (
 var paths utils.Paths = utils.SetUpPaths()
 
 func init() {
-	// set up scripts
+	// chmod scripts
 	scripts := []string{
 		paths.Scripts.Checkout,
 		paths.Scripts.CompareBinaries,

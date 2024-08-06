@@ -7,12 +7,12 @@ if [ "$OS" = "Linux" ]; then
     CMD="dockerd &"
 elif [ "$OS" = "Darwin" ]; then
     # docker desktop...
+    # TODO should change to dockerd & here too?
     CMD="open -a Docker"
 else
     echo "Unsupported operating system: $OS"
     exit 1
 fi
-
 
 if ! docker info > /dev/null 2>&1; then
     echo "Docker is not running. Opening Docker..."
@@ -22,16 +22,16 @@ if ! docker info > /dev/null 2>&1; then
     }
 
     start=$(date +%s)
-    timeout=$((start + 75))
+    timeout=$((start + 100))
 
     while ! docker info > /dev/null 2>&1; do
         echo "Waiting for Docker to start..."
         now=$(date +%s)
-        if [ $now -gt $timeout ]; then
+        if [ "$now" -gt $timeout ]; then
             echo "Timed out waiting for Docker to start."
             exit 1
         fi
-        sleep 4
+        sleep 5
     done
 fi
 echo "Docker is running."

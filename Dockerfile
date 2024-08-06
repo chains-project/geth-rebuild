@@ -80,12 +80,13 @@ ARG REPRODUCE_LOC
 COPY --from=builder ${REFERENCE_LOC} ${REFERENCE_LOC}
 COPY --from=builder ${REPRODUCE_LOC} ${REPRODUCE_LOC}
 
-# Get binary comparison script
-ENV SCRIPT_SRC=./internal/scripts/compare_binaries.sh
-ENV COMPARE_SCRIPT=/bin/compare.sh
+# Get binary comparison script 
+#TODO send in as ARG
+ENV SCRIPT_SRC=./internal/scripts/compare_SHA256.sh 
+ENV COMPARE_SCRIPT=/bin/compare_SHA256.sh
 
 COPY ${SCRIPT_SRC} ${COMPARE_SCRIPT}
 RUN chmod +x ${COMPARE_SCRIPT}
 
 # Run binary verification/comparison on run
-CMD ["/bin/compare.sh", "/bin/geth-reference", "/bin/geth-reproduce"]
+CMD ["/bin/compare_SHA256.sh", "/bin/geth-reference", "/bin/geth-reproduce"]

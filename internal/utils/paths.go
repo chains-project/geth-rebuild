@@ -63,11 +63,11 @@ func SetUpPaths() Paths {
 			ReproduceBin: filepath.Join(rootDir, "bin", "geth-reproduce"),
 		},
 		Scripts: Scripts{
-			Checkout:        filepath.Join(rootDir, "internal", "scripts", "checkout.sh"),
-			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_binaries.sh"),
-			DiffReport:      filepath.Join(rootDir, "internal", "scripts", "diff_report.sh"),
+			Checkout:        filepath.Join(rootDir, "internal", "scripts", "git_checkout.sh"),
+			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_SHA256.sh"),
+			DiffReport:      filepath.Join(rootDir, "internal", "scripts", "html_diff_report.sh"),
 			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
-			Verify:          filepath.Join(rootDir, "internal", "scripts", "verify.sh"),
+			Verify:          filepath.Join(rootDir, "internal", "scripts", "docker_verify.sh"),
 		},
 	}
 	return paths
