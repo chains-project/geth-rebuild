@@ -14,7 +14,8 @@ For example, `gethrebuild linux-amd64 1.14.3`
 
 See command documentation for optional arguments `gethrebuild --help`
 
-> [!NOTE] Must be run inside project directory
+> [!NOTE]
+> Must be run inside project directory
 
 ## Cases of Unreproducibility
 
