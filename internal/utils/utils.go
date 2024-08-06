@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Runs command with print and returns any outputs and errors
+// Runs command with print and returns any output or error
 func RunCommand(cmd string, args ...string) (out string, err error) {
 	exeCmd := exec.Command(cmd, args...)
 
