@@ -11,7 +11,7 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-type ResultLog struct {
+type RebuildLog struct {
 	Image  string `json:"image"` // TODO name it tag??
 	Status string `json:"status"`
 	CID    string `json:"cid"`
@@ -27,7 +27,7 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 	for key, value := range args {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
 	}
-	cmdArgs = append(cmdArgs, bi.DockerDir)
+	cmdArgs = append(cmdArgs, bi.DockerfileDir)
 
 	// run docker build
 	_, err := utils.RunCommand("docker", cmdArgs...)
@@ -52,7 +52,7 @@ func Verify(dockerTag string, paths utils.Paths) (reproduces bool, err error) {
 		log.Fatal(err)
 	}
 
-	var result ResultLog
+	var result RebuildLog
 	if err := json.Unmarshal(data, &result); err != nil {
 		log.Fatal(err)
 	}

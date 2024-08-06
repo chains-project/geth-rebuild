@@ -39,7 +39,7 @@ type Scripts struct {
 	Verify          string
 }
 
-// Sets up project paths according to predefined paths
+// Sets up project paths according to predefined values
 func SetUpPaths() Paths {
 	rootDir, err := GetRootDir("geth-rebuild")
 	if err != nil {

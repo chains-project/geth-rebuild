@@ -13,21 +13,21 @@ type Spec interface {
 }
 
 type BuildInput struct {
-	Artifact    ArtifactSpec
-	Toolchain   ToolchainSpec
-	Environment EnvSpec
-	DockerTag   string
-	DockerDir   string
+	Artifact      ArtifactSpec
+	Toolchain     ToolchainSpec
+	Environment   EnvSpec
+	DockerTag     string
+	DockerfileDir string
 }
 
 // Configures build input for Docker rebuild
 func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, de EnvSpec, paths utils.Paths) BuildInput {
 	return BuildInput{
-		Artifact:    af,
-		Toolchain:   tc,
-		Environment: de,
-		DockerTag:   createDockerTag(af.GethVersion, string(af.OS), string(af.Arch)),
-		DockerDir:   paths.Directories.Docker,
+		Artifact:      af,
+		Toolchain:     tc,
+		Environment:   de,
+		DockerTag:     createDockerTag(af.GethVersion, string(af.OS), string(af.Arch)),
+		DockerfileDir: paths.Directories.Docker,
 	}
 }
 
