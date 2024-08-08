@@ -29,7 +29,7 @@ while [ ${#random_indices[@]} -lt "$NUM_COMMITS" ]; do
 done
 
 
-OUT="../../experiments/random_commitws.txt"
+OUT="../../experiments/random_commits.json"
 
 if [ -e $OUT ]; then
   rm $OUT
@@ -40,3 +40,28 @@ for index in "${random_indices[@]}"; do
     version=$(git describe --tags --abbrev=0 "$commit")
     echo "$commit $version" >> $OUT
 done
+
+
+
+# Prepare JSON output
+json_output="{\"since\": \"$SINCE_COMMIT\", \"to\": \"$TO_COMMIT\", \"commits\":["
+
+first=true
+for index in "${random_indices[@]}"; do
+    commit=$(echo "$COMMITS" | sed "${index}q;d")
+    version=$(git describe --tags --abbrev=0 "$commit")
+    
+    if [ "$first" = true ]; then
+        first=false
+    else
+        json_output+=","
+    fi
+    
+    json_output+="
+    {\"commit\":\"$commit\",\"version\":\"$version\"}"
+done
+
+json_output+="]}"
+
+# Write JSON to file
+echo "$json_output" > "$OUT"
