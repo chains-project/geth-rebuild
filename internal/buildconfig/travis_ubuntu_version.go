@@ -10,7 +10,10 @@ import (
 
 /* This file is for calling the Travis CI API to fetch the actual ubuntu distribution used in a build.
 Accessing the API is necessary to correctly retrieve the used distribution as a bug in Travis lets
-one distribution be defined in .travis.yml whereas another (random) distribution will be used in practice.
+one distribution be defined in .travis.yml whereas another (random) distribution will be used in practice 
+See https://travis-ci.community/t/travis-uses-unexpected-ubuntu-distribution/14286/2
+
+This is particularly bad Travis CI sometimes chooses bionic, which is known to have path issues (https://github.com/golang/go/issues/67011)
 
 In the beginning of a Travis log, the actual distribution used is found in the line `Codename: xx`
 */
