@@ -36,6 +36,7 @@ func (af ArtifactSpec) String() string {
 // Returns configured rebuild Artifact Specification
 func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
 	var commit string
+	var unstable bool
 
 	exists, err := gethRepoExists(paths)
 	if err != nil {
@@ -72,7 +73,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		}
 
 		commit = pa.Unstable
-		af.Unstable = true
+		unstable = true
 	}
 
 	af = ArtifactSpec{
@@ -81,6 +82,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		Arch:        pa.Arch,
 		Commit:      commit,
 		ShortCommit: commit[0:8],
+		Unstable:    unstable,
 	}
 
 	return af, nil

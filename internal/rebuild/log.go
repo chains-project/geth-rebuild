@@ -10,6 +10,11 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
+
+// func logStatus(status string) {
+// 	// TODO must read whole file
+// }
+
 func createResultsLog(bi buildconfig.BuildInput, paths utils.Paths) error {
 	ResultsLog = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
 

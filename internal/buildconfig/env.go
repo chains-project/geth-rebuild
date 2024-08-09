@@ -9,6 +9,7 @@ import (
 
 type EnvSpec struct {
 	UbuntuDist   string
+	ArtifactSlug string
 	Flags        FlagSpec
 	Dependencies []string
 }
@@ -33,6 +34,7 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 
 	env = EnvSpec{
 		UbuntuDist:   dist,
+		ArtifactSlug: createSlug(af),
 		Flags:        envFlags,
 		Dependencies: DefaultConfig.UtilDeps,
 	}
@@ -42,11 +44,12 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 // Returns a string -> string map with the environment specific build arguments needed in the docker rebuild
 func (env EnvSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST": env.UbuntuDist,
-		"CGO_ENABLED": env.Flags.CGO_ENABLED,
-		"ELF_TARGET":  env.Flags.ElfTarget,
-		"GOARM":       env.Flags.ArmVersion,
-		"UTIL_DEPS":   strings.Join(env.Dependencies, " "),
+		"UBUNTU_DIST":   env.UbuntuDist,
+		"ARTIFACT_SLUG": env.ArtifactSlug,
+		"CGO_ENABLED":   env.Flags.CGO_ENABLED,
+		"ELF_TARGET":    env.Flags.ElfTarget,
+		"GOARM":         env.Flags.ArmVersion,
+		"UTIL_DEPS":     strings.Join(env.Dependencies, " "),
 	}
 }
 
@@ -93,4 +96,12 @@ func newFlagSpec(af ArtifactSpec) (FlagSpec, error) {
 
 	return FlagSpec{CGO_ENABLED: CGOEnabled, ArmVersion: version, ElfTarget: elfTarget}, nil
 
+}
+
+func createSlug(af ArtifactSpec) string {
+	var version = af.GethVersion
+	if af.Unstable {
+		version = fmt.Sprintf("%s-unstable", af.GethVersion)
+	}
+	return fmt.Sprintf("geth-%s-%s-%s-%s", string(af.OS), string(af.Arch), version, af.ShortCommit)
 }
