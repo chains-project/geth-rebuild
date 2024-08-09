@@ -16,8 +16,33 @@ type RebuildLog struct {
 	CID    string `json:"cid"`
 }
 
+// TODO when are all directories set up????
+
+func logBuildInfo(bi buildconfig.BuildInput, paths utils.Paths) error {
+	targetFile := filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
+	args := bi.GetBuildArgs()
+	args["status"] = "unfinished"
+
+	data, err := json.MarshalIndent(args, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal build arguments to JSON: %v", err)
+	}
+
+	if err := os.WriteFile(targetFile, data, 0644); err != nil {
+		return fmt.Errorf("failed to write file %s: %v", targetFile, err)
+	}
+
+	return nil
+}
+
 // Starts a reproducing docker build for dockerfile at `dockerDir` using configured build arguments in `bi`
-func RunDockerBuild(bi buildconfig.BuildInput) error {
+func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
+	// create the log for results
+	err := logBuildInfo(bi, paths)
+	if err != nil {
+		return fmt.Errorf("could not write rebuild log: %w", err)
+	}
+
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
@@ -29,7 +54,7 @@ func RunDockerBuild(bi buildconfig.BuildInput) error {
 	cmdArgs = append(cmdArgs, bi.DockerfileDir)
 
 	// run docker build
-	_, err := utils.RunCommand("docker", cmdArgs...)
+	_, err = utils.RunCommand("docker", cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("failed docker build: %w", err)
 	}
