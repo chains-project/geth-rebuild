@@ -12,7 +12,7 @@ fi
 
 if [ ! -f "$LOG_FILE" ]; then
     echo "error: no log file found at $LOG_FILE"
-
+    exit 1
 fi
 
 # Run container in detached mode
@@ -20,7 +20,7 @@ fi
 echo && echo "Running container $DOCKER_TAG in detached mode"
 
 CONTAINER_ID=$(docker run -d "$DOCKER_TAG") || { echo "failed to run container $DOCKER_TAG"; exit 1; }
-docker logs -f "$CONTAINER_ID"  # Capture docker compare script output
+docker logs -f "$CONTAINER_ID" || { echo "error retrieving docker logs"; exit 1; } # Capture docker compare script output
 
 
 # Docker script status
