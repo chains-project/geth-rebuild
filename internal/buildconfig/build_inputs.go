@@ -21,11 +21,11 @@ type BuildInput struct {
 }
 
 // Configures build input for Docker rebuild
-func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, de EnvSpec, paths utils.Paths) BuildInput {
+func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, env EnvSpec, paths utils.Paths) BuildInput {
 	return BuildInput{
 		Artifact:      af,
 		Toolchain:     tc,
-		Environment:   de,
+		Environment:   env,
 		DockerTag:     createDockerTag(af),
 		DockerfileDir: paths.Directories.Docker,
 	}
@@ -40,7 +40,7 @@ func (bi BuildInput) String() string {
 	return str
 }
 
-// Gathers all relevant build arguments into a string -> string map
+// Gathers all relevant docker build arguments into a string -> string map
 func (bi BuildInput) GetBuildArgs() map[string]string {
 	buildArgs := make(map[string]string)
 
@@ -67,6 +67,6 @@ func createDockerTag(af ArtifactSpec) string {
 
 	now := time.Now()
 	timestamp := now.Format("2006-01-02-15.04")
- 	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, string(af.OS), string(af.Arch), timestamp)
+	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, string(af.OS), string(af.Arch), timestamp)
 	return tag
 }

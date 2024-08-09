@@ -32,13 +32,13 @@ func moveLog(from string, to string) error {
 }
 
 // Creates unique directory path that is categorized (match, mismatch, error)
-func getCategorizedPath(status, dockerTag string, paths utils.Paths) (string, error) {
+func getCategorizedPath(status Status, dockerTag string, paths utils.Paths) (string, error) {
 	switch status {
-	case "match":
+	case Match:
 		return filepath.Join(paths.Directories.MatchLogs, dockerTag), nil
-	case "mismatch":
+	case Mismatch:
 		return filepath.Join(paths.Directories.MismatchLogs, dockerTag), nil
-	case "error":
+	case Error:
 		return filepath.Join(paths.Directories.ErrorLogs, dockerTag), nil
 	default:
 		return "", fmt.Errorf("error: unexpected rebuild status: %s", status)

@@ -10,20 +10,15 @@ import (
 )
 
 type RebuildResult struct {
-	Status string `json:"STATUS"`
+	Status Status `json:"STATUS"`
 }
 
-var ResultsDir string
-var ResultsLog string
+var TargetLogDir string
+var TargetBinDir string
+var ResultsLogPath string
 
 // Starts a reproducing docker build using configured build arguments in `bi`
 func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
-	// create a results log and fill with build inputs
-	err := createResultsLog(bi, paths)
-	if err != nil {
-		return fmt.Errorf("could not write rebuild results log: %w", err)
-	}
-
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
@@ -35,48 +30,54 @@ func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
 	cmdArgs = append(cmdArgs, bi.DockerfileDir)
 
 	// run docker build
-	_, err = utils.RunCommand("docker", cmdArgs...)
+	_, err := utils.RunCommand("docker", cmdArgs...)
 	if err != nil {
+		_ = logResults(bi, Error, paths) // ignore any errors here
 		return fmt.Errorf("failed docker build: %w", err)
 	}
-
 	return nil
 }
 
 // Runs verification script in a Docker container to retrieve rebuild results
 // Manipulates the rebuild log's json key `STATUS` : match, mismatch, or error
-func RunVerification(dockerTag string, paths utils.Paths) error {
-	targetBinDir := filepath.Join(paths.Directories.Bin, dockerTag)
-	_, err := utils.RunCommand(paths.Scripts.VerifyResult, dockerTag, targetBinDir, ResultsLog) // TODO handle bindir i.e. remove or something
+func RunVerification(bi buildconfig.BuildInput, dockerTag string, paths utils.Paths) error {
+	err := logResults(bi, Incomplete, paths)
 	if err != nil {
-		return fmt.Errorf("failed docker verification: %w", err) // TODO should return error rebuild results?
+		return fmt.Errorf("could not write rebuild results log: %w", err)
+	}
+
+	TargetBinDir = filepath.Join(paths.Directories.Bin, dockerTag)
+
+	_, err = utils.RunCommand(paths.Scripts.VerifyResult, dockerTag, TargetBinDir, ResultsLogPath)
+	if err != nil {
+		_ = logResults(bi, Error, paths) // ignore any errors here // TODO specify which error in the log, optional arg
+		return fmt.Errorf("failed docker verification: %w", err)
 	}
 	return nil
 }
 
 // Gets logged rebuild result for the docker tag
 func GetRebuildResult(dockerTag string, paths utils.Paths) (RebuildResult, error) {
-	result, err := readParseLog(ResultsLog)
+	result, err := readParseLog(ResultsLogPath)
 	if err != nil {
-		return RebuildResult{}, err
+		return RebuildResult{Status: Error}, err
 	}
 
-	ResultsDir, err = getCategorizedPath(result.Status, dockerTag, paths)
+	TargetLogDir, err = getCategorizedPath(result.Status, dockerTag, paths)
 	if err != nil {
-		return RebuildResult{}, err
+		return result, err
 	}
 
-	os.MkdirAll(ResultsDir, 0755)
+	os.MkdirAll(TargetLogDir, 0755)
+	newPath := filepath.Join(TargetLogDir, fmt.Sprintf("%s.json", dockerTag))
 
-	NewResultsLog := filepath.Join(ResultsDir, fmt.Sprintf("%s.json", dockerTag))
-
-	err = moveLog(ResultsLog, NewResultsLog)
+	err = moveLog(ResultsLogPath, newPath)
 	if err != nil {
-		return RebuildResult{}, err
+		return result, err
 	}
 
-	ResultsLog = NewResultsLog
-	fmt.Printf("\nLogged results to %s\n", ResultsLog)
+	ResultsLogPath = newPath
+	fmt.Printf("\nLogged results to %s\n", ResultsLogPath)
 
 	return result, nil
 }

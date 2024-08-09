@@ -8,41 +8,41 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
-func main() {
-	var stableExps [][]experiments.ExperimentInput
-	var unstableExps [][]experiments.ExperimentInput
+type ExperimentPaths struct {
+	RootDir     string
+	Executable  string
+	CommitsFile string
+}
 
+var (
+	paths ExperimentPaths
+	exps  [][]experiments.ExperimentInput
+)
+var (
+	// All stable builds since 1.14.2, which is the upgrade from ubuntu bionic to noble in travis.yml
+	StableVersions = []string{"1.14.7", "1.14.6", "1.14.5", "1.14.4", "1.14.3", "1.14.2"}
+	Arches         = []utils.Arch{utils.AMD64, utils.A386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
+)
+
+func init() {
 	base, err := utils.GetRootDir("geth-rebuild")
 	if err != nil {
 		log.Fatalf("error finding root path: %v", err)
 	}
-	executable := filepath.Join(base, "gethrebuild")
 
-	path := filepath.Join(base, "internal", "experiments", "data", "random_commits.json")
-	arches := []utils.Arch{utils.AMD64, utils.A386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
+	paths = ExperimentPaths{
+		RootDir:     base,
+		Executable:  filepath.Join(base, "gethrebuild"),
+		CommitsFile: filepath.Join(base, "internal", "experiments", "data", "20_latest_commits.json")}
 
-	// Generate experiments for each architecture
-	for _, arch := range arches {
-		// Generate stable experiments
-		exps, err := experiments.GenerateExperimentInputs(utils.Linux, arch, "")
-		if err != nil {
-			log.Fatalf("error generating stable version experiments: %v", err)
-		}
-		stableExps = append(stableExps, exps)
-
-		// Generate unstable experiments
-		exps, err = experiments.GenerateExperimentInputs(utils.Linux, arch, path)
-		if err != nil {
-			log.Fatalf("error generating unstable version experiments: %v", err)
-		}
-		unstableExps = append(unstableExps, exps)
+	exps, err = experiments.GenerateAllExperiments(utils.Linux, Arches, StableVersions, paths.CommitsFile)
+	if err != nil {
+		log.Fatalf("error generating experiments: %v", err)
 	}
+}
 
-	// for _, exps := range stableExps {
-	// 	experiments.RunExperiments(exps, executable)
-	// }
-
-	for _, exps := range unstableExps {
-		experiments.RunExperiments(exps, executable)
+func main() {
+	for _, exp := range exps {
+		experiments.RunExperiments(exp, paths.Executable)
 	}
 }

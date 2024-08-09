@@ -34,10 +34,28 @@ type JSONData struct {
 	Commits []Commit `json:"commits"`
 }
 
-// All stable builds since 1.14.2, which is the upgrade from ubuntu bionic to noble in travis.yml
-var stableVersions = []string{"1.14.7", "1.14.6", "1.14.5", "1.14.4", "1.14.3", "1.14.2"}
+// Generates all experiment inputs for given os
+func GenerateAllExperiments(ops utils.OS, arches []utils.Arch, stableVersions []string, commitsFile string) (experiments [][]ExperimentInput, err error) {
+	for _, arch := range arches {
+		// Generate stable experiments
+		exps, err := GenerateExperimentInputs(utils.Linux, arch, stableVersions, "")
+		if err != nil {
+			return experiments, fmt.Errorf("error generating stable version experiments: %v", err)
+		}
+		experiments = append(experiments, exps)
 
-func GenerateExperimentInputs(ops utils.OS, arch utils.Arch, commitsFile string) (experiments []ExperimentInput, err error) {
+		// Generate unstable experiments
+		exps, err = GenerateExperimentInputs(utils.Linux, arch, nil, commitsFile)
+		if err != nil {
+			return experiments, fmt.Errorf("error generating unstable version experiments: %v", err)
+		}
+		experiments = append(experiments, exps)
+	}
+	return experiments, nil
+}
+
+// Generates all experiments for given os/arch
+func GenerateExperimentInputs(ops utils.OS, arch utils.Arch, stableVersions []string, commitsFile string) (experiments []ExperimentInput, err error) {
 	if commitsFile != "" {
 		data, err := os.ReadFile(commitsFile)
 		if err != nil {

@@ -10,24 +10,28 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
+type Status string
 
-// func logStatus(status string) {
-// 	// TODO must read whole file
-// }
+const (
+	Match      Status = "match"
+	Mismatch   Status = "mismatch"
+	Error      Status = "error"
+	Incomplete Status = "incomplete"
+)
 
-func createResultsLog(bi buildconfig.BuildInput, paths utils.Paths) error {
-	ResultsLog = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
+func logResults(bi buildconfig.BuildInput, status Status, paths utils.Paths) error {
+	ResultsLogPath = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
 
 	args := bi.GetBuildArgs()
-	args["STATUS"] = "incomplete"
+	args["STATUS"] = string(status)
 
 	data, err := json.MarshalIndent(args, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal build arguments to JSON: %v", err)
 	}
 
-	if err := os.WriteFile(ResultsLog, data, 0644); err != nil {
-		return fmt.Errorf("failed to write file %s: %v", ResultsLog, err)
+	if err := os.WriteFile(ResultsLogPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write file %s: %v", ResultsLogPath, err)
 	}
 
 	return nil
@@ -35,15 +39,13 @@ func createResultsLog(bi buildconfig.BuildInput, paths utils.Paths) error {
 
 // Generates a Diffoscope html report for unsuccessful rebuilds identified by their docker tag
 func GenerateDiffReport(dockerTag string, paths utils.Paths) error {
-	binDir := filepath.Join(paths.Directories.Bin, dockerTag)
-	targetDir, _ := getCategorizedPath("mismatch", dockerTag, paths)
-	htmlReport := filepath.Join(targetDir, fmt.Sprintf("%s.html", dockerTag))
+	htmlPath := filepath.Join(TargetLogDir, fmt.Sprintf("%s.html", dockerTag))
 
 	fmt.Print("\nAnalyzing binary differences...")
-	if _, err := utils.RunCommand(paths.Scripts.DiffReport, binDir, htmlReport); err != nil {
+	if _, err := utils.RunCommand(paths.Scripts.DiffReport, TargetBinDir, htmlPath); err != nil {
 		return fmt.Errorf("failed to run diffoscope: %w", err)
 	}
-	fmt.Printf("\nHTML diff report written to %s", htmlReport)
+	fmt.Printf("\nHTML diff report written to %s", htmlPath)
 
 	return nil
 }

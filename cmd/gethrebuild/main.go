@@ -76,7 +76,7 @@ func main() {
 	fmt.Printf("\nRebuilding finished, comparing binaries...\n\n")
 
 	// Run containerized "verification" i.e. comparison of binaries
-	err = rebuild.RunVerification(bi.DockerTag, paths)
+	err = rebuild.RunVerification(bi, bi.DockerTag, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
