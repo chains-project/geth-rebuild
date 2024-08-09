@@ -4,7 +4,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/chains-project/geth-rebuild/experiments"
+	"github.com/chains-project/geth-rebuild/internal/experiments"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -18,7 +18,7 @@ func main() {
 	}
 	executable := filepath.Join(base, "gethrebuild")
 
-	path := filepath.Join(base, "experiments", "random_commits.json")
+	path := filepath.Join(base, "internal", "experiments", "data", "random_commits.json")
 	arches := []utils.Arch{utils.AMD64, utils.A386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
 
 	// Generate experiments for each architecture
