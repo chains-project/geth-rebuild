@@ -21,7 +21,7 @@ type FlagSpec struct {
 
 // Returns configured rebuild Environment specification
 func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
-	dist, err := getUbuntuDist(af.GethVersion)
+	dist, err := GetUbuntuDist(af.Commit, 20) // TODO decide search length...
 	if err != nil {
 		return env, fmt.Errorf("failed to get Ubuntu distribution: %w", err)
 	}
