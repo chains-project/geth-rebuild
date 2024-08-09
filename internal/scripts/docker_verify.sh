@@ -1,15 +1,19 @@
 #!/bin/sh
 
 DOCKER_TAG=$1
-BIN_DIR=$2
-LOG_DIR=$3
+STORE_BINS=$2
+LOG_FILE=$3
 
 
-if [ -z "$DOCKER_TAG"  ] || [ -z "$BIN_DIR" ] || [ -z "$LOG_DIR" ]; then
-  echo "Usage: $0 <docker tag> <bin dir> <log dir>"
+if [ -z "$DOCKER_TAG"  ] || [ -z "$STORE_BINS" ] || [ -z "$LOG_FILE" ]; then
+  echo "Usage: $0 <docker tag> <unique bin dir> <json log file>"
   exit 1
 fi
 
+if [ ! -f "$LOG_FILE" ]; then
+    echo "error: no log file found at $LOG_FILE"
+
+fi
 
 # Run container in detached mode
 # Runs comparison script on start (see dockerfile)
@@ -27,39 +31,41 @@ docker logs -f "$CONTAINER_ID"  # Capture docker compare script output
 SCRIPT_EXIT_STATUS=$(docker wait "$CONTAINER_ID") 
 
 
+# Determine result status of rebuild
+STATUS=""
+if [ "$SCRIPT_EXIT_STATUS" -eq 0 ]; then
+    STATUS="match"
+elif [ "$SCRIPT_EXIT_STATUS" -eq 1 ]; then
+    STATUS="mismatch"
+elif [ "$SCRIPT_EXIT_STATUS" -eq 2 ]; then
+    STATUS="error"
+else
+    STATUS="error"
+    echo "error: unexpected script exit code: $SCRIPT_EXIT_STATUS" 
+fi
+
+# Write result to json
+jq --arg key "STATUS" --arg value $STATUS \
+'.[$key] = $value' "$LOG_FILE" > tmp.$$.json && mv tmp.$$.json "$LOG_FILE" \
+|| { echo "failed to write log to $LOG_FILE"; exit 1; }
+
+# Write contianer id to json
+jq --arg key "CONTAINER_ID" --arg value "$CONTAINER_ID" \
+'.[$key] = $value' "$LOG_FILE" > tmp.$$.json && mv tmp.$$.json "$LOG_FILE" \
+|| { echo "failed to write log to $LOG_FILE"; exit 1; }
+
 # If no binaries produced, abort
-if [ "$SCRIPT_EXIT_STATUS" -eq 2 ]; then
-    echo "Aborting" 
+if [ "$STATUS" = "error" ]; then
+    echo "Aborting"
     exit 2
 fi
 
-# Write rebuild result log
-mkdir -p "$LOG_DIR"
-LOG_TO="$LOG_DIR/$DOCKER_TAG.json"
-
-RESULT=""
-if [ "$SCRIPT_EXIT_STATUS" -eq 0 ]; then
-    RESULT="match"
-elif [ "$SCRIPT_EXIT_STATUS" -eq 1 ]; then
-    RESULT="mismatch"
-else
-    echo "error: unexpected script exit code: $SCRIPT_EXIT_STATUS" 
-    exit 1
-fi
-
-# Write
-# TODO should include the SHA256 values here too...?
-echo "{\"image\": \"$DOCKER_TAG\", \"status\": \"$RESULT\", \"cid\": \"$CONTAINER_ID\"}" \
-    > "$LOG_TO" || { echo "failed to write log to $LOG_TO"; exit 1; }
-
-
 # Copy produced binaries to local machine
-COPY_TO="$BIN_DIR/$DOCKER_TAG"
-mkdir -p "$COPY_TO"
+mkdir -p "$STORE_BINS" # TODO MOve
 
-echo "Copying produced binaries to $COPY_TO"
-docker cp "$CONTAINER_ID:/bin/geth-reference" "$COPY_TO"  || { echo "failed to copy /bin/geth-reference to $COPY_TO"; exit 1; }
-docker cp "$CONTAINER_ID:/bin/geth-reproduce" "$COPY_TO" ||  { echo "failed to copy /bin/geth-reference to $COPY_TO"; exit 1; }
+echo "Copying produced binaries to $STORE_BINS"
+docker cp "$CONTAINER_ID:/bin/geth-reference" "$STORE_BINS"  || { echo "failed to copy /bin/geth-reference to $STORE_BINS"; exit 1; }
+docker cp "$CONTAINER_ID:/bin/geth-reproduce" "$STORE_BINS" ||  { echo "failed to copy /bin/geth-reference to $STORE_BINS"; exit 1; }
 
 
 # Stop container
