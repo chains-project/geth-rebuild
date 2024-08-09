@@ -14,8 +14,10 @@ type ArtifactSpec struct {
 	GethVersion string
 	Commit      string
 	ShortCommit string
+	Unstable    bool
 }
 
+// Returns a string -> string map with the artifact specific build arguments needed in the docker rebuild
 func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
 		"OS":           string(af.OS),
@@ -70,6 +72,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		}
 
 		commit = pa.Unstable
+		af.Unstable = true
 	}
 
 	af = ArtifactSpec{

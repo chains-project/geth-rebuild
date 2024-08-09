@@ -26,7 +26,7 @@ func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, de EnvSpec, paths utils.Pa
 		Artifact:      af,
 		Toolchain:     tc,
 		Environment:   de,
-		DockerTag:     createDockerTag(af.GethVersion, string(af.OS), string(af.Arch)),
+		DockerTag:     createDockerTag(af),
 		DockerfileDir: paths.Directories.Docker,
 	}
 }
@@ -40,7 +40,7 @@ func (bi BuildInput) String() string {
 	return str
 }
 
-// Gathers all build args into a string to string map
+// Gathers all relevant build arguments into a string -> string map
 func (bi BuildInput) GetBuildArgs() map[string]string {
 	buildArgs := make(map[string]string)
 
@@ -57,10 +57,16 @@ func (bi BuildInput) GetBuildArgs() map[string]string {
 	return buildArgs
 }
 
-// Creates a timestamped tag for a Docker build
-func createDockerTag(version string, ops string, arch string) string {
+// Creates unique timestamped tag for a Docker rebuild
+func createDockerTag(af ArtifactSpec) string {
+	version := af.GethVersion
+
+	if af.Unstable {
+		version = fmt.Sprintf("%s-%s", af.GethVersion, af.Commit)
+	}
+
 	now := time.Now()
 	timestamp := now.Format("2006-01-02-15.04")
-	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, ops, arch, timestamp)
+ 	tag := fmt.Sprintf("rebuild-geth-v%s-%s-%s-%s", version, string(af.OS), string(af.Arch), timestamp)
 	return tag
 }

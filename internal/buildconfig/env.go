@@ -39,6 +39,7 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 	return env, nil
 }
 
+// Returns a string -> string map with the environment specific build arguments needed in the docker rebuild
 func (env EnvSpec) ToMap() map[string]string {
 	return map[string]string{
 		"UBUNTU_DIST": env.UbuntuDist,
