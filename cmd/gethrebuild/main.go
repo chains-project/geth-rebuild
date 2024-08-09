@@ -82,7 +82,7 @@ func main() {
 	}
 
 	// Retrieve the results as logged to file
-	result, err := rebuild.GetRebuildResult(bi.DockerTag, paths)
+	result, err := rebuild.CategorizeRebuild(bi.DockerTag, paths)
 	if err != nil {
 		log.Fatal(err)
 	}

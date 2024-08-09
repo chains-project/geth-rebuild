@@ -33,6 +33,7 @@ func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
 	_, err := utils.RunCommand("docker", cmdArgs...)
 	if err != nil {
 		_ = logResults(bi, Error, paths) // ignore any errors here
+		_, _ = CategorizeRebuild(bi.DockerTag, paths)
 		return fmt.Errorf("failed docker build: %w", err)
 	}
 	return nil
@@ -50,14 +51,15 @@ func RunVerification(bi buildconfig.BuildInput, dockerTag string, paths utils.Pa
 
 	_, err = utils.RunCommand(paths.Scripts.VerifyResult, dockerTag, TargetBinDir, ResultsLogPath)
 	if err != nil {
-		_ = logResults(bi, Error, paths) // ignore any errors here // TODO specify which error in the log, optional arg
+		_ = logResults(bi, Error, paths) // TODO specify which error in the log, optional arg
+		_, _ = CategorizeRebuild(bi.DockerTag, paths)
 		return fmt.Errorf("failed docker verification: %w", err)
 	}
 	return nil
 }
 
 // Gets logged rebuild result for the docker tag
-func GetRebuildResult(dockerTag string, paths utils.Paths) (RebuildResult, error) {
+func CategorizeRebuild(dockerTag string, paths utils.Paths) (RebuildResult, error) {
 	result, err := readParseLog(ResultsLogPath)
 	if err != nil {
 		return RebuildResult{Status: Error}, err
