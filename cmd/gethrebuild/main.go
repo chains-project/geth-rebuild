@@ -18,7 +18,7 @@ func init() {
 		paths.Scripts.CompareBinaries,
 		paths.Scripts.DiffReport,
 		paths.Scripts.StartDocker,
-		paths.Scripts.Verify,
+		paths.Scripts.VerifyResult,
 	}
 	err := utils.ChangePermission(scripts, 0755) // add execute permissions
 	if err != nil {
