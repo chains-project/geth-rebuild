@@ -4,12 +4,13 @@ set -e
 
 NUM_COMMITS=$1
 
+
 if [ -z "$NUM_COMMITS" ]; then
-  echo "Usage: $0 <since commit> <to commit> <retrieve # commits>"
+  echo "Usage: $0 <retrieve # commits>"
   exit 1
 fi
 
-cd ../tmp/go-ethereum
+cd ./tmp/go-ethereum
 
 SINCE_COMMIT="71aa15c98f88ee03097e5b30ccbb564734180ca3"
 TO_COMMIT="aa55f5ea200dfd07618fdf658d9d2741c3b376a8"
@@ -29,7 +30,7 @@ while [ ${#random_indices[@]} -lt "$NUM_COMMITS" ]; do
 done
 
 
-OUT="../../experiments/random_commits.json"
+OUT="../../internal/experiments/data/random_commits.json"
 
 if [ -e $OUT ]; then
   rm $OUT
@@ -57,8 +58,7 @@ for index in "${random_indices[@]}"; do
         json_output+=","
     fi
     
-    json_output+="
-    {\"commit\":\"$commit\",\"version\":\"$version\"}"
+    json_output+="{\"commit\":\"$commit\",\"version\":\"$version\"}"
 done
 
 json_output+="]}"
