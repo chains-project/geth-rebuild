@@ -57,26 +57,37 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bi := config.NewBuildInput(af, tc, env, paths)
-	fmt.Println(bi)
-
+	// ensure docker is running
 	err = utils.StartDocker(paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = rebuild.RunDockerBuild(bi)
+	// gather all build inputs
+	bi := config.NewBuildInput(af, tc, env, paths)
+	fmt.Println(bi)
+
+	// rebuild in docker
+	err = rebuild.RunDockerBuild(bi, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("\nRebuilding finished, comparing binaries...\n\n")
 
-	result, err := rebuild.Verify(bi.DockerTag, paths)
+	// Run containerized "verification" i.e. comparison of binaries
+	err = rebuild.RunVerification(bi.DockerTag, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Retrieve the results as logged to file
+	result, err := rebuild.GetRebuildResult(bi.DockerTag, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Optional diffoscope for a mismatch
 	if result.Status == "mismatch" && pa.Diff {
 		rebuild.GenerateDiffReport(bi.DockerTag, paths)
 	}
