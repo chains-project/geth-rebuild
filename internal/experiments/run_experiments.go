@@ -8,7 +8,7 @@ import (
 )
 
 func RunExperiments(exps []ExperimentInput, exePath string) {
-	fmt.Printf("[EXPERIMENT RUN FOR OS `%s` ARCH `%s`]\n", exps[0].OS, exps[0].Arch)
+	fmt.Printf("\n\n[EXPERIMENT] OS: `%s` ARCH: `%s`\n", exps[0].OS, exps[0].Arch)
 
 	// Sequential execution of experiments
 	for _, exp := range exps {

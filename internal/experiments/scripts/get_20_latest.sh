@@ -16,8 +16,6 @@ if [ -e $OUT ]; then
   rm $OUT
 fi
 
-
-
 VERSION="v1.14.8"
 
 json_output="{\"commits\": ["

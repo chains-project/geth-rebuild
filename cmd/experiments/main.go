@@ -9,10 +9,11 @@ import (
 )
 
 type ExperimentPaths struct {
-	RootDir     string
-	MainProgram string
-	Executable  string
-	CommitsFile string
+	RootDir            string
+	MainProgram        string
+	Executable         string
+	CommitsFile        string
+	GetUnstableCommits string
 }
 
 var (
@@ -23,22 +24,34 @@ var (
 )
 
 func init() {
+	// set up some utility paths...
 	base, err := utils.GetRootDir("geth-rebuild")
 	if err != nil {
 		log.Fatalf("error finding root path: %v", err)
 	}
 
 	paths = ExperimentPaths{
-		RootDir:     base,
-		MainProgram: filepath.Join(base, "cmd", "gethrebuild"),
-		Executable:  filepath.Join(base, "gethrebuild"),
-		CommitsFile: filepath.Join(base, "internal", "experiments", "data", "20_latest_commits.json")}
+		RootDir:            base,
+		MainProgram:        filepath.Join(base, "cmd", "gethrebuild"),
+		Executable:         filepath.Join(base, "gethrebuild"),
+		GetUnstableCommits: filepath.Join(base, "internal", "experiments", "scripts", "get_20_latest.sh"),
+		CommitsFile:        filepath.Join(base, "internal", "experiments", "data", "20_latest_commits.json"),
+	}
 
-	_, err = utils.RunCommand("go", "build", paths.MainProgram)
+	utils.ChangePermission([]string{paths.GetUnstableCommits}, 0755)
+
+	// get unstable build commits (20 latest)
+	// TODO, version param...
+	_, err = utils.RunCommand(paths.GetUnstableCommits)
 	if err != nil {
 		log.Fatalf("error creating executable: %v", err)
 	}
 
+	// build the executable...
+	_, err = utils.RunCommand("go", "build", paths.MainProgram)
+	if err != nil {
+		log.Fatalf("error creating executable: %v", err)
+	}
 }
 
 func main() {
