@@ -19,10 +19,11 @@ const (
 	Incomplete Status = "incomplete"
 )
 
-func logResults(bi config.BuildConfig, status Status, paths utils.Paths) error {
-	ResultsLogPath = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
+// TODO specify which error in the log, optional arg
+func writeLog(bc config.BuildConfig, status Status, paths utils.Paths) error {
+	ResultsLogPath = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bc.DockerTag))
 
-	args := bi.GetBuildArgs()
+	args := bc.GetBuildArgs()
 	args["STATUS"] = string(status)
 
 	data, err := json.MarshalIndent(args, "", "  ")
@@ -42,7 +43,7 @@ func GenerateDiffReport(dockerTag string, paths utils.Paths) error {
 	htmlPath := filepath.Join(TargetLogDir, fmt.Sprintf("%s.html", dockerTag))
 
 	fmt.Print("\nAnalyzing binary differences...")
-	if _, err := utils.RunCommand(paths.Scripts.DiffReport, TargetBinDir, htmlPath); err != nil {
+	if _, err := utils.RunCommand(paths.Scripts.GenerateDiffReport, TargetBinDir, htmlPath); err != nil {
 		return fmt.Errorf("failed to run diffoscope: %w", err)
 	}
 	fmt.Printf("\nHTML diff report written to %s", htmlPath)

@@ -14,11 +14,11 @@ var paths utils.Paths = utils.SetUpPaths()
 func init() {
 	// chmod scripts
 	scripts := []string{
-		paths.Scripts.Checkout,
+		paths.Scripts.GitCheckout,
 		paths.Scripts.CompareBinaries,
-		paths.Scripts.DiffReport,
+		paths.Scripts.GenerateDiffReport,
 		paths.Scripts.StartDocker,
-		paths.Scripts.VerifyResult,
+		paths.Scripts.GetRebuildResults,
 	}
 	err := utils.ChangePermission(scripts, 0755) // add execute permissions
 	if err != nil {

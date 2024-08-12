@@ -136,7 +136,7 @@ func cloneGethRepo(paths utils.Paths) error {
 // Invokes script that checks out geth at a tagged version or commit
 func checkoutGeth(versionOrCommit string, paths utils.Paths) error {
 	// TODO remove script and run cmd instead...
-	_, err := utils.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, versionOrCommit)
+	_, err := utils.RunCommand(paths.Scripts.GitCheckout, paths.Directories.Geth, versionOrCommit)
 	if err != nil {
 		return err
 	}

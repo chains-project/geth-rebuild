@@ -34,11 +34,11 @@ type Files struct {
 }
 
 type Scripts struct {
-	Checkout        string
-	CompareBinaries string
-	DiffReport      string
-	StartDocker     string
-	VerifyResult    string
+	GitCheckout        string
+	CompareBinaries    string
+	GenerateDiffReport string
+	StartDocker        string
+	GetRebuildResults  string
 }
 
 type RebuildPaths struct {
@@ -72,11 +72,11 @@ func SetUpPaths() Paths {
 			ReproduceBin: filepath.Join(rootDir, "bin", "geth-reproduce"),
 		},
 		Scripts: Scripts{
-			Checkout:        filepath.Join(rootDir, "internal", "scripts", "git_checkout.sh"),
-			CompareBinaries: filepath.Join(rootDir, "internal", "scripts", "compare_SHA256.sh"),
-			DiffReport:      filepath.Join(rootDir, "internal", "scripts", "html_diff_report.sh"),
-			StartDocker:     filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
-			VerifyResult:    filepath.Join(rootDir, "internal", "scripts", "docker_verify.sh"),
+			GitCheckout:        filepath.Join(rootDir, "internal", "scripts", "git_checkout.sh"),
+			CompareBinaries:    filepath.Join(rootDir, "internal", "scripts", "compare_binary_SHA.sh"),
+			GenerateDiffReport: filepath.Join(rootDir, "internal", "scripts", "gen_diff_report.sh"),
+			StartDocker:        filepath.Join(rootDir, "internal", "scripts", "start_docker.sh"),
+			GetRebuildResults:  filepath.Join(rootDir, "internal", "scripts", "get_rebuild_results.sh"),
 		},
 	}
 	os.MkdirAll(paths.Directories.Temp, 0755)
