@@ -14,8 +14,10 @@ type ArtifactSpec struct {
 	GethVersion string
 	Commit      string
 	ShortCommit string
+	Unstable    bool
 }
 
+// Returns a string -> string map with the artifact specific build arguments needed in the docker rebuild
 func (af ArtifactSpec) ToMap() map[string]string {
 	return map[string]string{
 		"OS":           string(af.OS),
@@ -34,6 +36,7 @@ func (af ArtifactSpec) String() string {
 // Returns configured rebuild Artifact Specification
 func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec, err error) {
 	var commit string
+	var unstable bool
 
 	exists, err := gethRepoExists(paths)
 	if err != nil {
@@ -70,6 +73,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		}
 
 		commit = pa.Unstable
+		unstable = true
 	}
 
 	af = ArtifactSpec{
@@ -78,6 +82,7 @@ func NewArtifactSpec(pa *utils.ProgramArgs, paths utils.Paths) (af ArtifactSpec,
 		Arch:        pa.Arch,
 		Commit:      commit,
 		ShortCommit: commit[0:8],
+		Unstable:    unstable,
 	}
 
 	return af, nil
@@ -131,7 +136,7 @@ func cloneGethRepo(paths utils.Paths) error {
 // Invokes script that checks out geth at a tagged version or commit
 func checkoutGeth(versionOrCommit string, paths utils.Paths) error {
 	// TODO remove script and run cmd instead...
-	_, err := utils.RunCommand(paths.Scripts.Checkout, paths.Directories.Geth, versionOrCommit)
+	_, err := utils.RunCommand(paths.Scripts.GitCheckout, paths.Directories.Geth, versionOrCommit)
 	if err != nil {
 		return err
 	}

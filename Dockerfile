@@ -21,6 +21,7 @@ ARG BUILD_CMD=""
 ARG TOOLCHAIN_DEPS=""
 
 # Environment spec
+ARG ARTIFACT_SLUG=""
 ARG GOARM=""
 ARG ELF_TARGET=""
 ARG UTIL_DEPS=""
@@ -43,7 +44,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 
 # Fetch reference binary and strip symbols + build ids
-ENV BIN_DIR="geth-${OS}-${ARCH}-${GETH_VERSION}-${SHORT_COMMIT}"
+ENV BIN_DIR=${ARTIFACT_SLUG}
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
 ENV REF_URL="https://gethstore.blob.core.windows.net/builds/${TAR_DIR}"
 RUN wget ${REF_URL} && \ 
@@ -82,11 +83,11 @@ COPY --from=builder ${REPRODUCE_LOC} ${REPRODUCE_LOC}
 
 # Get binary comparison script 
 #TODO send in as ARG
-ENV SCRIPT_SRC=./internal/scripts/compare_SHA256.sh 
-ENV COMPARE_SCRIPT=/bin/compare_SHA256.sh
+ENV SCRIPT_SRC=./internal/scripts/compare_binary_SHA.sh 
+ENV COMPARE_SCRIPT=/bin/compare_binary_SHA.sh 
 
 COPY ${SCRIPT_SRC} ${COMPARE_SCRIPT}
 RUN chmod +x ${COMPARE_SCRIPT}
 
 # Run binary verification/comparison on run
-CMD ["/bin/compare_SHA256.sh", "/bin/geth-reference", "/bin/geth-reproduce"]
+CMD ["/bin/compare_binary_SHA.sh", "/bin/geth-reference", "/bin/geth-reproduce"]

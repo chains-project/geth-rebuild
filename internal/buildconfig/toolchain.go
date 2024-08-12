@@ -40,6 +40,7 @@ func NewToolchainSpec(af ArtifactSpec, paths utils.Paths) (tc ToolchainSpec, err
 	return tc, nil
 }
 
+// Returns a string -> string map with the toolchain specific build arguments needed in the docker rebuild
 func (tc ToolchainSpec) ToMap() map[string]string {
 	return map[string]string{
 		"GO_VERSION":     tc.GoVersion,
