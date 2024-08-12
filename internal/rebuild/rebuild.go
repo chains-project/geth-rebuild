@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/chains-project/geth-rebuild/internal/buildconfig"
+	config "github.com/chains-project/geth-rebuild/internal/buildconfig"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -18,7 +18,7 @@ var TargetBinDir string
 var ResultsLogPath string
 
 // Starts a reproducing docker build using configured build arguments in `bi`
-func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
+func RunDockerBuild(bi config.BuildConfig, paths utils.Paths) error {
 	// set docker build args
 	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
 
@@ -41,7 +41,7 @@ func RunDockerBuild(bi buildconfig.BuildInput, paths utils.Paths) error {
 
 // Runs verification script in a Docker container to retrieve rebuild results
 // Manipulates the rebuild log's json key `STATUS` : match, mismatch, or error
-func RunVerification(bi buildconfig.BuildInput, dockerTag string, paths utils.Paths) error {
+func RunVerification(bi config.BuildConfig, dockerTag string, paths utils.Paths) error {
 	err := logResults(bi, Incomplete, paths)
 	if err != nil {
 		return fmt.Errorf("could not write rebuild results log: %w", err)

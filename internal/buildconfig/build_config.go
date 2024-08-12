@@ -12,7 +12,7 @@ type Spec interface {
 	String() string
 }
 
-type BuildInput struct {
+type BuildConfig struct {
 	Artifact      ArtifactSpec
 	Toolchain     ToolchainSpec
 	Environment   EnvSpec
@@ -21,8 +21,8 @@ type BuildInput struct {
 }
 
 // Configures build input for Docker rebuild
-func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, env EnvSpec, paths utils.Paths) BuildInput {
-	return BuildInput{
+func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, env EnvSpec, paths utils.Paths) BuildConfig {
+	return BuildConfig{
 		Artifact:      af,
 		Toolchain:     tc,
 		Environment:   env,
@@ -31,8 +31,8 @@ func NewBuildInput(af ArtifactSpec, tc ToolchainSpec, env EnvSpec, paths utils.P
 	}
 }
 
-func (bi BuildInput) String() string {
-	args := bi.GetBuildArgs()
+func (bc BuildConfig) String() string {
+	args := bc.GetBuildArgs()
 	var str string = "\n[BUILD ARGUMENTS]\n\n"
 	for key, value := range args {
 		str += fmt.Sprintf("%s=%s\n", key, value)
@@ -41,16 +41,16 @@ func (bi BuildInput) String() string {
 }
 
 // Gathers all relevant docker build arguments into a string -> string map
-func (bi BuildInput) GetBuildArgs() map[string]string {
+func (bc BuildConfig) GetBuildArgs() map[string]string {
 	buildArgs := make(map[string]string)
 
-	for k, v := range bi.Artifact.ToMap() {
+	for k, v := range bc.Artifact.ToMap() {
 		buildArgs[k] = v
 	}
-	for k, v := range bi.Toolchain.ToMap() {
+	for k, v := range bc.Toolchain.ToMap() {
 		buildArgs[k] = v
 	}
-	for k, v := range bi.Environment.ToMap() {
+	for k, v := range bc.Environment.ToMap() {
 		buildArgs[k] = v
 	}
 

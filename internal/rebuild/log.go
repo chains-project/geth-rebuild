@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/chains-project/geth-rebuild/internal/buildconfig"
+	config "github.com/chains-project/geth-rebuild/internal/buildconfig"
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
@@ -19,7 +19,7 @@ const (
 	Incomplete Status = "incomplete"
 )
 
-func logResults(bi buildconfig.BuildInput, status Status, paths utils.Paths) error {
+func logResults(bi config.BuildConfig, status Status, paths utils.Paths) error {
 	ResultsLogPath = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bi.DockerTag))
 
 	args := bi.GetBuildArgs()
