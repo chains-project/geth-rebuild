@@ -28,6 +28,7 @@ echo "Reproducing build:    SHA256    $REP_SHA" && echo
 
 
 # TODO tests for exit status
+# TODO use other exit statuses
 if [ -z "$REF_SHA" ] || [ -z "$REP_SHA" ]; then
     echo && echo "error producing one or both artifacts" && echo && echo
     exit 2
