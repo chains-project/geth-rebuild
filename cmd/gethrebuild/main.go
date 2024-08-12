@@ -64,11 +64,11 @@ func main() {
 	}
 
 	// gather all build inputs
-	buildConfig := config.NewBuildInput(af, tc, env, paths)
+	buildConfig := config.NewBuildConfig(af, tc, env, paths)
 	fmt.Println(buildConfig)
 
 	// rebuild in docker
-	err = rebuild.RunDockerBuild(buildConfig, paths)
+	err = rebuild.DockerRebuild(buildConfig, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,19 +76,24 @@ func main() {
 	fmt.Printf("\nRebuilding finished, comparing binaries...\n\n")
 
 	// Run containerized "verification" i.e. comparison of binaries
-	err = rebuild.RunVerification(buildConfig, buildConfig.DockerTag, paths)
+	err = rebuild.RunComparison(buildConfig, paths)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, err := rebuild.ReadRebuildResult()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Retrieve the results as logged to file
-	result, err := rebuild.CategorizeRebuild(buildConfig.DockerTag, paths)
+	err = rebuild.ProcessLogFile(buildConfig.DockerTag, result, paths)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Optional diffoscope for a mismatch
-	if result.Status == "mismatch" && pa.Diff {
+	if result == rebuild.Mismatch && pa.Diff {
 		rebuild.GenerateDiffReport(buildConfig.DockerTag, paths)
 	}
 }

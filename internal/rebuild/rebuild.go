@@ -13,27 +13,35 @@ type RebuildResult struct {
 	Status Status `json:"STATUS"`
 }
 
+// TODO better option than package variables...?
 var TargetLogDir string
 var TargetBinDir string
 var ResultsLogPath string
 
-// Starts a reproducing docker build using configured build arguments in `bi`
-func RunDockerBuild(bi config.BuildConfig, paths utils.Paths) error {
-	// set docker build args
-	cmdArgs := []string{"build", "-t", bi.DockerTag, "--progress=plain"}
+// Starts a docker rebuild using build configurations in `bi`
+func DockerRebuild(bc config.BuildConfig, paths utils.Paths) error {
+	// log incomplete rebuild
+	err := writeLog(bc, Incomplete, paths)
+	if err != nil {
+		return fmt.Errorf("could not write rebuild results log: %w", err)
+	}
 
-	args := bi.GetBuildArgs()
+	// set docker build args
+	cmdArgs := []string{"build", "-t", bc.DockerTag, "--progress=plain"}
+
+	args := bc.GetBuildArgs()
 	for key, value := range args {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--build-arg=%s=%s", key, value))
 	}
 
-	cmdArgs = append(cmdArgs, bi.DockerfileDir)
+	cmdArgs = append(cmdArgs, paths.Directories.Docker)
 
 	// run docker build
-	_, err := utils.RunCommand("docker", cmdArgs...)
+	_, err = utils.RunCommand("docker", cmdArgs...)
+
 	if err != nil {
-		_ = logResults(bi, Error, paths) // ignore any errors here
-		_, _ = CategorizeRebuild(bi.DockerTag, paths)
+		_ = writeLog(bc, Error, paths) // ignore any errors here
+		_ = ProcessLogFile(bc.DockerTag, Error, paths)
 		return fmt.Errorf("failed docker build: %w", err)
 	}
 	return nil
@@ -41,45 +49,48 @@ func RunDockerBuild(bi config.BuildConfig, paths utils.Paths) error {
 
 // Runs verification script in a Docker container to retrieve rebuild results
 // Manipulates the rebuild log's json key `STATUS` : match, mismatch, or error
-func RunVerification(bi config.BuildConfig, dockerTag string, paths utils.Paths) error {
-	err := logResults(bi, Incomplete, paths)
-	if err != nil {
-		return fmt.Errorf("could not write rebuild results log: %w", err)
-	}
+func RunComparison(bc config.BuildConfig, paths utils.Paths) error {
+	TargetBinDir = filepath.Join(paths.Directories.Bin, bc.DockerTag)
+	_, err := utils.RunCommand(paths.Scripts.GetRebuildResults, bc.DockerTag, TargetBinDir, ResultsLogPath)
 
-	TargetBinDir = filepath.Join(paths.Directories.Bin, dockerTag)
-
-	_, err = utils.RunCommand(paths.Scripts.VerifyResult, dockerTag, TargetBinDir, ResultsLogPath)
-	if err != nil {
-		_ = logResults(bi, Error, paths) // TODO specify which error in the log, optional arg
-		_, _ = CategorizeRebuild(bi.DockerTag, paths)
+	if err != nil { // If script fails, log as error and
+		_ = writeLog(bc, Error, paths)
+		_ = ProcessLogFile(bc.DockerTag, Error, paths)
 		return fmt.Errorf("failed docker verification: %w", err)
 	}
 	return nil
 }
 
-// Gets logged rebuild result for the docker tag
-func CategorizeRebuild(dockerTag string, paths utils.Paths) (RebuildResult, error) {
+// Reads
+func ReadRebuildResult() (Status, error) {
 	result, err := readParseLog(ResultsLogPath)
 	if err != nil {
-		return RebuildResult{Status: Error}, err
+		return Error, err
 	}
+	return result.Status, nil
+}
 
-	TargetLogDir, err = getCategorizedPath(result.Status, dockerTag, paths)
+// Moves logged results file to corresponding status dir - match/mismatch/error
+func ProcessLogFile(dockerTag string, status Status, paths utils.Paths) error {
+	newDirectory, err := getCategorizedPath(status, dockerTag, paths)
 	if err != nil {
-		return result, err
+		return err
 	}
 
-	os.MkdirAll(TargetLogDir, 0755)
-	newPath := filepath.Join(TargetLogDir, fmt.Sprintf("%s.json", dockerTag))
+	err = os.MkdirAll(newDirectory, 0755)
+	if err != nil {
+		return err
+	}
+
+	newPath := filepath.Join(newDirectory, fmt.Sprintf("%s.json", dockerTag))
 
 	err = moveLog(ResultsLogPath, newPath)
 	if err != nil {
-		return result, err
+		return err
 	}
 
 	ResultsLogPath = newPath
 	fmt.Printf("\nLogged results to %s\n", ResultsLogPath)
 
-	return result, nil
+	return nil
 }
