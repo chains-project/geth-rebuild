@@ -19,12 +19,16 @@ const (
 	Incomplete Status = "incomplete"
 )
 
-// TODO specify which error in the log, optional arg
-func writeLog(bc config.BuildConfig, status Status, paths utils.Paths) error {
+// Writes the build args for a rebuild and the corresponding results status and any error messages
+func writeResultsLog(bc config.BuildConfig, paths utils.Paths, status Status, errMsg string) error {
 	ResultsLogPath = filepath.Join(paths.Directories.Logs, fmt.Sprintf("%s.json", bc.DockerTag))
 
 	args := bc.GetBuildArgs()
 	args["STATUS"] = string(status)
+
+	if status == Error {
+		args["ERROR"] = errMsg
+	}
 
 	data, err := json.MarshalIndent(args, "", "  ")
 	if err != nil {
@@ -37,6 +41,7 @@ func writeLog(bc config.BuildConfig, status Status, paths utils.Paths) error {
 
 	return nil
 }
+
 
 // Generates a Diffoscope html report for unsuccessful rebuilds identified by their docker tag
 func GenerateDiffReport(dockerTag string, paths utils.Paths) error {
