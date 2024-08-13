@@ -40,10 +40,10 @@ func writeLog(bc config.BuildConfig, status Status, paths utils.Paths) error {
 
 // Generates a Diffoscope html report for unsuccessful rebuilds identified by their docker tag
 func GenerateDiffReport(dockerTag string, paths utils.Paths) error {
-	htmlPath := filepath.Join(TargetLogDir, fmt.Sprintf("%s.html", dockerTag))
+	htmlPath := filepath.Join(ResultsLogDir, fmt.Sprintf("%s.html", dockerTag))
 
 	fmt.Print("\nAnalyzing binary differences...")
-	if _, err := utils.RunCommand(paths.Scripts.GenerateDiffReport, TargetBinDir, htmlPath); err != nil {
+	if _, err := utils.RunCommand(paths.Scripts.GenerateDiffReport, ResultsBinDir, htmlPath); err != nil {
 		return fmt.Errorf("failed to run diffoscope: %w", err)
 	}
 	fmt.Printf("\nHTML diff report written to %s", htmlPath)
