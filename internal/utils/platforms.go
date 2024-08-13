@@ -20,9 +20,9 @@ const (
 	ARM5  Arch = "arm5"
 	ARM6  Arch = "arm6"
 	ARM7  Arch = "arm7"
-	A386  Arch = "386"
+	I386  Arch = "386"
 )
 
 var validArchitectures = map[OS][]Arch{
-	Linux: {AMD64, ARM64, ARM5, ARM6, ARM7, A386},
+	Linux: {AMD64, ARM64, ARM5, ARM6, ARM7, I386},
 }
