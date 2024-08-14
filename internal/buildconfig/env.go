@@ -9,7 +9,7 @@ import (
 
 type EnvSpec struct {
 	UbuntuDist   string
-	ArtifactSlug string
+	URLSlug      string
 	Flags        FlagSpec
 	Dependencies []string
 }
@@ -34,7 +34,7 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 
 	env = EnvSpec{
 		UbuntuDist:   dist,
-		ArtifactSlug: createSlug(af),
+		URLSlug:      createSlug(af),
 		Flags:        envFlags,
 		Dependencies: DefaultConfig.UtilDeps,
 	}
@@ -44,12 +44,12 @@ func NewEnvSpec(af ArtifactSpec, paths utils.Paths) (env EnvSpec, err error) {
 // Returns a string -> string map with the environment specific build arguments needed in the docker rebuild
 func (env EnvSpec) ToMap() map[string]string {
 	return map[string]string{
-		"UBUNTU_DIST":   env.UbuntuDist,
-		"ARTIFACT_SLUG": env.ArtifactSlug,
-		"CGO_ENABLED":   env.Flags.CGO_ENABLED,
-		"ELF_TARGET":    env.Flags.ElfTarget,
-		"GOARM":         env.Flags.ArmVersion,
-		"UTIL_DEPS":     strings.Join(env.Dependencies, " "),
+		"UBUNTU_DIST": env.UbuntuDist,
+		"URL_SLUG":    env.URLSlug,
+		"CGO_ENABLED": env.Flags.CGO_ENABLED,
+		"ELF_TARGET":  env.Flags.ElfTarget,
+		"GOARM":       env.Flags.ArmVersion,
+		"UTIL_DEPS":   strings.Join(env.Dependencies, " "),
 	}
 }
 

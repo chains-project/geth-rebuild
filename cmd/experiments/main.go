@@ -19,7 +19,7 @@ type ExperimentPaths struct {
 var (
 	// All stable builds since 1.14.2, which is the upgrade from ubuntu bionic to noble in travis.yml
 	StableVersions = []string{"1.14.7", "1.14.6", "1.14.5", "1.14.4", "1.14.3", "1.14.2"}
-	Arches         = []utils.Arch{utils.AMD64, utils.A386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
+	Arches         = []utils.Arch{utils.AMD64, utils.I386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
 	paths          ExperimentPaths
 )
 

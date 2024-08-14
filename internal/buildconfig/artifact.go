@@ -3,6 +3,7 @@ package buildconfig
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
@@ -25,6 +26,7 @@ func (af ArtifactSpec) ToMap() map[string]string {
 		"GETH_VERSION": af.GethVersion,
 		"COMMIT":       af.Commit,
 		"SHORT_COMMIT": af.ShortCommit,
+		"UNSTABLE":     strconv.FormatBool(af.Unstable),
 	}
 }
 

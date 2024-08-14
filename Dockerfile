@@ -21,7 +21,7 @@ ARG BUILD_CMD=""
 ARG TOOLCHAIN_DEPS=""
 
 # Environment spec
-ARG ARTIFACT_SLUG=""
+ARG URL_SLUG=""
 ARG GOARM=""
 ARG ELF_TARGET=""
 ARG UTIL_DEPS=""
@@ -44,7 +44,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 
 
 # Fetch reference binary and strip symbols + build ids
-ENV BIN_DIR=${ARTIFACT_SLUG}
+ENV BIN_DIR=${URL_SLUG}
 ENV TAR_DIR="${BIN_DIR}.tar.gz"
 ENV REF_URL="https://gethstore.blob.core.windows.net/builds/${TAR_DIR}"
 RUN wget ${REF_URL} && \ 

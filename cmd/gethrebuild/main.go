@@ -87,7 +87,7 @@ func main() {
 	}
 
 	// Retrieve the results as logged to file
-	err = rebuild.ProcessLogFile(buildConfig.DockerTag, result, paths)
+	err = rebuild.ProcessLogFile(buildConfig.DockerTag, paths, result)
 	if err != nil {
 		log.Fatal(err)
 	}

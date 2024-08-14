@@ -71,7 +71,7 @@ func getLinuxBuildCmd(ops utils.OS, arch utils.Arch, travisYML string) (string, 
 	switch arch {
 	case utils.AMD64:
 		return "go run build/ci.go install -dlgo", nil
-	case utils.A386, utils.ARM64:
+	case utils.I386, utils.ARM64:
 		pattern = fmt.Sprintf(`go\s*run\s*build/ci\.go\s*install.*-arch\s%s.*`, regexp.QuoteMeta(string(arch)))
 	case utils.ARM5, utils.ARM6, utils.ARM7:
 		v, err := getArmVersion(ops, arch)
