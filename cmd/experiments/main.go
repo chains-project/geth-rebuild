@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -18,7 +19,7 @@ type ExperimentPaths struct {
 
 var (
 	// All stable builds since 1.14.2, which is the upgrade from ubuntu bionic to noble in travis.yml
-	StableVersions = []string{"1.14.7", "1.14.6", "1.14.5", "1.14.4", "1.14.3", "1.14.2"}
+	StableVersions = []string{"1.14.8", "1.14.7", "1.14.6", "1.14.5", "1.14.4", "1.14.3", "1.14.2"}
 	Arches         = []utils.Arch{utils.AMD64, utils.I386, utils.ARM5, utils.ARM6, utils.ARM7, utils.ARM64}
 	paths          ExperimentPaths
 )
@@ -35,17 +36,17 @@ func init() {
 		MainProgram:        filepath.Join(base, "cmd", "gethrebuild"),
 		Executable:         filepath.Join(base, "gethrebuild"),
 		GetUnstableCommits: filepath.Join(base, "internal", "experiments", "scripts", "get_20_latest.sh"),
-		CommitsFile:        filepath.Join(base, "internal", "experiments", "data", "20_latest_commits.json"),
+		CommitsFile:        filepath.Join(base, "internal", "experiments", "data", "unstable_versions.json"),
 	}
 
-	utils.ChangePermission([]string{paths.GetUnstableCommits}, 0755)
+	//utils.ChangePermission([]string{paths.GetUnstableCommits}, 0755)
 
 	// get unstable build commits (20 latest)
 	// TODO, version param...
-	_, err = utils.RunCommand(paths.GetUnstableCommits)
-	if err != nil {
-		log.Fatalf("error creating executable: %v", err)
-	}
+	//_, err = utils.RunCommand(paths.GetUnstableCommits)
+	// if err != nil {
+	// 	log.Fatalf("error creating executable: %v", err)
+	// }
 
 	// build the executable...
 	_, err = utils.RunCommand("go", "build", paths.MainProgram)
@@ -59,6 +60,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("error generating experiments: %v", err)
 	}
+
+	fmt.Println(exps)
 
 	for _, exp := range exps {
 		experiments.RunExperiments(exp, paths.Executable)
