@@ -1,44 +1,38 @@
-{
-  "commits": [
+[
     {
-      "commit": "c35684709c8c71da78d5abbc6c38a501dd05b58a",
-      "version": "v1.14.9"
+        "commit": "6eb42a6b4f9a07a4a11a9ac706b6a738212de210",
+        "version": "1.14.9"
     },
     {
-      "commit": "c4b01d80b94820abeea52504c661e2a2ca8739d7",
-      "version": "v1.14.9"
+        "commit": "7a149a159a609f5c0a1eb0cc76dc27a944a1007b",
+        "version": "1.14.9"
     },
     {
-      "commit": "2f2e5b088a08ff164fb20f704d04d67ddd6edbf5",
-      "version": "v1.14.9"
+        "commit": "c35684709c8c71da78d5abbc6c38a501dd05b58a",
+        "version": "1.14.9"
     },
     {
-      "commit": "c686485a062d0addddf40c3808de7fe90793ed18",
-      "version": "v1.14.9"
+        "commit": "c4b01d80b94820abeea52504c661e2a2ca8739d7",
+        "version": "1.14.9"
     },
     {
-      "commit": "2b9d19870646140c4dc90645cf7c828cc76860aa",
-      "version": "v1.14.9"
+        "commit": "b635089c7c7b4d9ae840e2052cf9f086109242ee",
+        "version": "1.14.8"
     },
     {
-      "commit": "bd57f35f8d1e920ef2b234ea6cd1aa18715b358f",
-      "version": "v1.14.9"
+        "commit": "dad8f237ffa5da2c2471f2d9f32d2bc5b580f667",
+        "version": "1.14.8"
     },
     {
-      "commit": "bc95452e024b91c238ef3e43f3573eb179a762d2",
-      "version": "v1.14.9"
+        "commit": "ff6e43e8c4db9f6d8afa7887ae9d2081c2c890d0",
+        "version": "1.14.8"
     },
     {
-      "commit": "ab03c5746c040be2336a0efa0e2dcc43871435f0",
-      "version": "v1.14.9"
+        "commit": "de6d5976794a9ed3b626d4eba57bf7f0806fb970",
+        "version": "1.14.8"
     },
     {
-      "commit": "1cf3b5d38ac64921819b8e999d194047c84c4126",
-      "version": "v1.14.9"
-    },
-    {
-      "commit": "880511dc39e5d4788a07313a1289c928c8b7c7b7",
-      "version": "v1.14.8"
+        "commit": "6e33dbf96a06cb3ad3bdbd5d0539e54de254ce6b",
+        "version": "1.14.8"
     }
-  ]
-}
+]

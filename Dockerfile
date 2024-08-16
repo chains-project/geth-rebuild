@@ -12,7 +12,7 @@ ARG REPRODUCE_LOC
 ARG OS="" 
 ARG ARCH=""
 ARG GETH_VERSION=""
-ARG GETH_COMMIT=""
+ARG COMMIT=""
 ARG SHORT_COMMIT=""
 
 # Toolchain spec
@@ -61,7 +61,7 @@ COPY ${GETH_SRC_DIR} ${GETH_DIR}
 
 # Rebuild the reference binary
 WORKDIR ${GETH_DIR}
-RUN git fetch && git checkout -b geth-reproduce ${GETH_COMMIT} && \
+RUN git fetch && git checkout -b geth-reproduce ${COMMIT} && \
     ${BUILD_CMD} ./cmd/geth
 
 
