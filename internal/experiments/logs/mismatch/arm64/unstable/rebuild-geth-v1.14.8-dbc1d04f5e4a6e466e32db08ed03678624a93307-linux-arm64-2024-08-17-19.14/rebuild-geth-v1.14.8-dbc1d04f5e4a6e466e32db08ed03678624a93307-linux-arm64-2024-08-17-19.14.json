@@ -1,0 +1,19 @@
+{
+  "ARCH": "arm64",
+  "BUILD_CMD": "go run build/ci.go install -dlgo -arch arm64 -cc aarch64-linux-gnu-gcc",
+  "CGO_ENABLED": "0",
+  "COMMIT": "dbc1d04f5e4a6e466e32db08ed03678624a93307",
+  "ELF_TARGET": "elf64-little",
+  "GETH_VERSION": "1.14.8",
+  "GOARM": "",
+  "GO_VERSION": "1.22.5",
+  "OS": "linux",
+  "SHORT_COMMIT": "dbc1d04f",
+  "STATUS": "mismatch",
+  "TOOLCHAIN_DEPS": "gcc-aarch64-linux-gnu libc6-dev-arm64-cross",
+  "UBUNTU_DIST": "bionic",
+  "UNSTABLE": "true",
+  "URL_SLUG": "geth-linux-arm64-1.14.8-unstable-dbc1d04f",
+  "UTIL_DEPS": "git ca-certificates wget binutils",
+  "CONTAINER_ID": "dcedf9abb289fa64d0f5c8a2f840470e2b7828dfb37c023481b9c9e412b20fd5"
+}
