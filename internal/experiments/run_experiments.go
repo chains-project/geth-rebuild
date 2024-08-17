@@ -24,7 +24,5 @@ func runExperiment(exp ExperimentInput, exePath string) {
 	out, err := utils.RunCommand(exePath, cmdArgs...)
 	if err != nil {
 		log.Printf("Error running gethrebuild: %v\nOutput: %s", err, string(out))
-	} else {
-		fmt.Printf("Experiment successful: %s\n", exp)
 	}
 }

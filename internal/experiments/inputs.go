@@ -23,21 +23,16 @@ func (i ExperimentInput) String() string {
 		i.OS, i.Arch, i.Version, i.Unstable)
 }
 
-type Commit struct {
-	SHA     string `json:"commit"`
-	Version string `json:"version"`
-}
-
 type JSONData struct {
-	Since   string   `json:"since"`
-	To      string   `json:"to"`
-	Commits []Commit `json:"commits"`
+	// Since   string   `json:"since"`
+	// To      string   `json:"to"`
+	Commits []DistInfoLog `json:"commits"`
 }
 
 // Generates all experiment inputs for given os
 func GenerateAllExperiments(ops utils.OS, arches []utils.Arch, stableVersions []string, commitsFile string) (experiments [][]ExperimentInput, err error) {
 	for _, arch := range arches {
-		// Generate stable experiments
+		//Generate stable experiments
 		// exps, err := GenerateExperimentInputs(utils.Linux, arch, stableVersions, "")
 		// if err != nil {
 		// 	return experiments, fmt.Errorf("error generating stable version experiments: %v", err)
@@ -69,7 +64,7 @@ func GenerateExperimentInputs(ops utils.OS, arch utils.Arch, stableVersions []st
 
 		for _, commit := range jsonData.Commits {
 			version := strings.TrimPrefix(commit.Version, "v")
-			experiments = append(experiments, ExperimentInput{OS: ops, Arch: arch, Version: version, Unstable: commit.SHA})
+			experiments = append(experiments, ExperimentInput{OS: ops, Arch: arch, Version: version, Unstable: commit.Commit})
 		}
 	} else {
 		// Generate stable experiments if no filepath is provided
