@@ -1,0 +1,19 @@
+{
+  "ARCH": "arm5",
+  "BUILD_CMD": "go run build/ci.go install -dlgo -arch arm -cc arm-linux-gnueabi-gcc",
+  "CGO_ENABLED": "0",
+  "COMMIT": "5550d8399f744aca0f50fc20bcd57bf2abeb13e9",
+  "ELF_TARGET": "elf32-little",
+  "GETH_VERSION": "1.14.4",
+  "GOARM": "5",
+  "GO_VERSION": "1.22.3",
+  "OS": "linux",
+  "SHORT_COMMIT": "5550d839",
+  "STATUS": "mismatch",
+  "TOOLCHAIN_DEPS": "gcc-arm-linux-gnueabi libc6-dev-armel-cross",
+  "UBUNTU_DIST": "focal",
+  "UNSTABLE": "false",
+  "URL_SLUG": "geth-linux-arm5-1.14.4-5550d839",
+  "UTIL_DEPS": "git ca-certificates wget binutils",
+  "CONTAINER_ID": "2a58a03ae00fc6a534265e32a7c3fadab1bb18fce36ddac6b6d70eb76bb4c49e"
+}

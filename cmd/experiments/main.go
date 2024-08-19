@@ -10,11 +10,12 @@ import (
 )
 
 type ExperimentPaths struct {
-	RootDir            string
-	MainProgram        string
-	Executable         string
-	CommitsFile        string
-	GetUnstableCommits string
+	RootDir                      string
+	GethDir                      string
+	MainProgram                  string
+	Executable                   string
+	GetUnstableCommits           string
+	UnstableCommitsFile          string
 }
 
 var (
@@ -32,21 +33,15 @@ func init() {
 	}
 
 	paths = ExperimentPaths{
-		RootDir:            base,
-		MainProgram:        filepath.Join(base, "cmd", "gethrebuild"),
-		Executable:         filepath.Join(base, "gethrebuild"),
-		GetUnstableCommits: filepath.Join(base, "internal", "experiments", "scripts", "get_20_latest.sh"),
-		CommitsFile:        filepath.Join(base, "internal", "experiments", "data", "unstable_versions.json"),
+		RootDir:                      base,
+		GethDir:                      filepath.Join(base, "tmp", "go-ethereum"),
+		MainProgram:                  filepath.Join(base, "cmd", "gethrebuild"),
+		Executable:                   filepath.Join(base, "gethrebuild"),
+		GetUnstableCommits:           filepath.Join(base, "internal", "experiments", "scripts", "get_available_unstable.sh"),
+		UnstableCommitsFile:          filepath.Join(base, "internal", "experiments", "data", "unstable_versions.json"),
 	}
 
 	//utils.ChangePermission([]string{paths.GetUnstableCommits}, 0755)
-
-	// get unstable build commits (20 latest)
-	// TODO, version param...
-	//_, err = utils.RunCommand(paths.GetUnstableCommits)
-	// if err != nil {
-	// 	log.Fatalf("error creating executable: %v", err)
-	// }
 
 	// build the executable...
 	_, err = utils.RunCommand("go", "build", paths.MainProgram)
@@ -56,7 +51,7 @@ func init() {
 }
 
 func main() {
-	exps, err := experiments.GenerateAllExperiments(utils.Linux, Arches, StableVersions, paths.CommitsFile)
+	exps, err := experiments.GenerateAllExperiments(utils.Linux, Arches, []string{}, paths.UnstableCommitsFile)
 	if err != nil {
 		log.Fatalf("error generating experiments: %v", err)
 	}
