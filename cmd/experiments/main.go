@@ -51,7 +51,7 @@ func init() {
 }
 
 func main() {
-	exps, err := experiments.GenerateAllExperiments(utils.Linux, Arches, []string{}, paths.UnstableCommitsFile)
+	exps, err := experiments.GenerateAllExperiments(utils.Linux, Arches, StableVersions, paths.UnstableCommitsFile)
 	if err != nil {
 		log.Fatalf("error generating experiments: %v", err)
 	}
