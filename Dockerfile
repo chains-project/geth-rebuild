@@ -61,6 +61,7 @@ COPY ${GETH_SRC_DIR} ${GETH_DIR}
 
 # Rebuild the reference binary
 WORKDIR ${GETH_DIR}
+RUN if [ "$ARCH" != "amd64" ]; then touch dummy.txt; fi
 RUN git fetch && git checkout -b geth-reproduce ${COMMIT} && \
     ${BUILD_CMD} ./cmd/geth
 
