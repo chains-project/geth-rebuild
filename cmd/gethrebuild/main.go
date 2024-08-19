@@ -57,11 +57,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// ensure docker is running
-	err = utils.StartDocker(paths)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// ensure docker is running	TODO probably only works on Darwin?
+	// err = utils.StartDocker(paths)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	// gather all build inputs
 	buildConfig := config.NewBuildConfig(af, tc, env, paths)
