@@ -33,14 +33,14 @@ type JSONData struct {
 func GenerateAllExperiments(ops utils.OS, arches []utils.Arch, stableVersions []string, commitsFile string) (experiments [][]ExperimentInput, err error) {
 	for _, arch := range arches {
 		//Generate stable experiments
-		// exps, err := GenerateExperimentInputs(utils.Linux, arch, stableVersions, "")
-		// if err != nil {
-		// 	return experiments, fmt.Errorf("error generating stable version experiments: %v", err)
-		// }
-		// experiments = append(experiments, exps)
+		exps, err := GenerateExperimentInputs(utils.Linux, arch, stableVersions, "")
+		if err != nil {
+			return experiments, fmt.Errorf("error generating stable version experiments: %v", err)
+		}
+		experiments = append(experiments, exps)
 
 		// Generate unstable experiments
-		exps, err := GenerateExperimentInputs(utils.Linux, arch, nil, commitsFile)
+		exps, err = GenerateExperimentInputs(utils.Linux, arch, nil, commitsFile)
 		if err != nil {
 			return experiments, fmt.Errorf("error generating unstable version experiments: %v", err)
 		}

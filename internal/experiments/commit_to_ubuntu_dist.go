@@ -11,6 +11,7 @@ import (
 	"github.com/chains-project/geth-rebuild/internal/utils"
 )
 
+// dummy file to find if any builds do not use bionic...
 // Define a struct to match the JSON structure
 type CommitInfo struct {
 	Commit  string `json:"commit"`
