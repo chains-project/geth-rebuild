@@ -6,7 +6,7 @@ Reproduce and verify source-to-binary semantics of a geth binary artifact.
 
 ## Usage
 
-`go build ./cmd/gethrebuild -o ./gethrebuild`
+`go build ./cmd/gethrebuild`
 
 `./gethrebuild <os> <arch> <version>`
 
@@ -15,7 +15,7 @@ For example, `gethrebuild linux-amd64 1.14.3`
 See command documentation for optional arguments `gethrebuild --help`
 
 > [!NOTE]
-> Must be run inside project directory
+> Must be run inside project directory 🩸
 
 ## Cases of Unreproducibility
 
@@ -28,7 +28,6 @@ In `.non-determinism/reports` four cases found for geth are shown:
 - **path**: embedding of absolute system paths
 - **gcc**: differing gcc versions using identical build settings
 
-> [!TIP]
 > Reproduce these cases by running #TODO
 
 ## Limitations
