@@ -2,14 +2,22 @@
 
 set -e
 
+# 33 unstable
+NUM_COMMITS=$1
+
+if [ -z "$NUM_COMMITS" ]; then
+  echo "Usage: $0 <retrieve # commits>"
+  exit 1
+fi
+
+
 cd ~/geth-rebuild/tmp/go-ethereum
 
 git fetch
 git checkout master
 git pull
 
-
-COMMITS=$(git log --format="%H" -n 20)
+COMMITS=$(git log --format="%H" -n "$NUM_COMMITS")
 OUT=~/geth-rebuild/internal/experiments/data/20_latest_commits.json
 
 if [ -e $OUT ]; then

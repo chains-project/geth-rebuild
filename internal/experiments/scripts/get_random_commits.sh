@@ -10,10 +10,10 @@ if [ -z "$NUM_COMMITS" ]; then
   exit 1
 fi
 
-cd ./tmp/go-ethereum
+cd ~/geth-rebuild/tmp/go-ethereum
 
-SINCE_COMMIT="71aa15c98f88ee03097e5b30ccbb564734180ca3"
-TO_COMMIT="aa55f5ea200dfd07618fdf658d9d2741c3b376a8"
+SINCE_COMMIT="b635089c"
+TO_COMMIT="6eb42a6b"
 
 COMMITS=$(git log --format="%H" "$SINCE_COMMIT..$TO_COMMIT")
 MAX=$(echo "$COMMITS" | wc -l | xargs)
@@ -30,7 +30,7 @@ while [ ${#random_indices[@]} -lt "$NUM_COMMITS" ]; do
 done
 
 
-OUT="../../internal/experiments/data/random_commits.json"
+OUT=~/geth-rebuild/internal/experiments/data/random_commits.json
 
 if [ -e $OUT ]; then
   rm $OUT

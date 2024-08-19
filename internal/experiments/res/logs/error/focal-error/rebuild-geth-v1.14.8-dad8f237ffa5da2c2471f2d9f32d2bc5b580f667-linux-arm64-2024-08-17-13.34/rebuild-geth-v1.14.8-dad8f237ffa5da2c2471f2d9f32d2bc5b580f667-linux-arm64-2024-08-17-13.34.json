@@ -1,0 +1,19 @@
+{
+  "ARCH": "arm64",
+  "BUILD_CMD": "go run build/ci.go install -dlgo -arch arm64 -cc aarch64-linux-gnu-gcc",
+  "CGO_ENABLED": "0",
+  "COMMIT": "dad8f237ffa5da2c2471f2d9f32d2bc5b580f667",
+  "ELF_TARGET": "elf64-little",
+  "ERROR": "command failed: docker build -t rebuild-geth-v1.14.8-dad8f237ffa5da2c2471f2d9f32d2bc5b580f667-linux-arm64-2024-08-17-13.34 --progress=plain --build-arg=ARCH=arm64 --build-arg=SHORT_COMMIT=dad8f237 --build-arg=GO_VERSION=1.22.5 --build-arg=CGO_ENABLED=0 --build-arg=UNSTABLE=true \"--build-arg=TOOLCHAIN_DEPS=gcc-aarch64-linux-gnu libc6-dev-arm64-cross\" --build-arg=UBUNTU_DIST=focal --build-arg=URL_SLUG=geth-linux-arm64-1.14.8-unstable-dad8f237 --build-arg=ELF_TARGET=elf64-little --build-arg=GOARM= --build-arg=GETH_VERSION=1.14.8 --build-arg=COMMIT=dad8f237ffa5da2c2471f2d9f32d2bc5b580f667 \"--build-arg=BUILD_CMD=go run build/ci.go install -dlgo -arch arm64 -cc aarch64-linux-gnu-gcc\" \"--build-arg=UTIL_DEPS=git ca-certificates wget binutils\" --build-arg=OS=linux /Users/viviandersson/geth-rebuild\nerror: exit status 1",
+  "GETH_VERSION": "1.14.8",
+  "GOARM": "",
+  "GO_VERSION": "1.22.5",
+  "OS": "linux",
+  "SHORT_COMMIT": "dad8f237",
+  "STATUS": "error",
+  "TOOLCHAIN_DEPS": "gcc-aarch64-linux-gnu libc6-dev-arm64-cross",
+  "UBUNTU_DIST": "focal",
+  "UNSTABLE": "true",
+  "URL_SLUG": "geth-linux-arm64-1.14.8-unstable-dad8f237",
+  "UTIL_DEPS": "git ca-certificates wget binutils"
+}
