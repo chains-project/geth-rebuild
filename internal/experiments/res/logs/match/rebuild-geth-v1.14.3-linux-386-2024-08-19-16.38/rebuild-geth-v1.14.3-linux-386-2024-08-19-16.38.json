@@ -1,0 +1,19 @@
+{
+  "ARCH": "386",
+  "BUILD_CMD": "go run build/ci.go install -dlgo -arch 386",
+  "CGO_ENABLED": "0",
+  "COMMIT": "ab48ba42f4f34873d65fd1737fabac5c680baff6",
+  "ELF_TARGET": "elf32-i386",
+  "GETH_VERSION": "1.14.3",
+  "GOARM": "",
+  "GO_VERSION": "1.22.3",
+  "OS": "linux",
+  "SHORT_COMMIT": "ab48ba42",
+  "STATUS": "match",
+  "TOOLCHAIN_DEPS": "gcc-multilib",
+  "UBUNTU_DIST": "focal",
+  "UNSTABLE": "false",
+  "URL_SLUG": "geth-linux-386-1.14.3-ab48ba42",
+  "UTIL_DEPS": "git ca-certificates wget binutils",
+  "CONTAINER_ID": "e7ef9104e21235f0a20a43ac1567a2e871dfbb28b21a4c5f9b4a99bf0378d0df"
+}

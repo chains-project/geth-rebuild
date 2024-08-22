@@ -1,0 +1,19 @@
+{
+  "ARCH": "amd64",
+  "BUILD_CMD": "go run build/ci.go install -dlgo",
+  "CGO_ENABLED": "1",
+  "COMMIT": "0dd173a727dd2d2409b8e401b22e85d20c25b71f",
+  "ELF_TARGET": "elf64-x86-64",
+  "GETH_VERSION": "1.14.5",
+  "GOARM": "",
+  "GO_VERSION": "1.22.4",
+  "OS": "linux",
+  "SHORT_COMMIT": "0dd173a7",
+  "STATUS": "match",
+  "TOOLCHAIN_DEPS": "gcc-multilib",
+  "UBUNTU_DIST": "focal",
+  "UNSTABLE": "false",
+  "URL_SLUG": "geth-linux-amd64-1.14.5-0dd173a7",
+  "UTIL_DEPS": "git ca-certificates wget binutils",
+  "CONTAINER_ID": "a54450670d767e2011061a6337c84cc65877a6c8ac6dd37ace2f058a011d576e"
+}

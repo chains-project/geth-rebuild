@@ -1,0 +1,19 @@
+{
+  "ARCH": "arm7",
+  "BUILD_CMD": "go run build/ci.go install -dlgo -arch arm -cc arm-linux-gnueabihf-gcc",
+  "CGO_ENABLED": "0",
+  "COMMIT": "cf8aa31e3edc6fc652963c5d5dee869cd69f077b",
+  "ELF_TARGET": "elf32-little",
+  "GETH_VERSION": "1.14.8",
+  "GOARM": "7",
+  "GO_VERSION": "1.22.5",
+  "OS": "linux",
+  "SHORT_COMMIT": "cf8aa31e",
+  "STATUS": "mismatch",
+  "TOOLCHAIN_DEPS": "gcc-arm-linux-gnueabihf libc6-dev-armhf-cross",
+  "UBUNTU_DIST": "bionic",
+  "UNSTABLE": "true",
+  "URL_SLUG": "geth-linux-arm7-1.14.8-unstable-cf8aa31e",
+  "UTIL_DEPS": "git ca-certificates wget binutils",
+  "CONTAINER_ID": "c5c27d4477ed301f94e7ea4201af8d0d0de3ab24f4029ab896d5b55d58bb12bc"
+}
